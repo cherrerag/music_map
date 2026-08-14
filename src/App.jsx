@@ -3,6 +3,7 @@ import HeaderControl from './components/HeaderControl';
 import NetworkGraph from './components/NetworkGraph';
 import ArtistSidebar from './components/ArtistSidebar';
 import PlaylistCartModal from './components/PlaylistCartModal';
+import AuthGatekeeperModal, { ALLOWED_EMAILS } from './components/AuthGatekeeperModal';
 import { SEED_ARTISTS, getArtistDetails } from './data/musicData';
 import { Sparkles, Info, Check } from 'lucide-react';
 
@@ -19,6 +20,18 @@ export default function App() {
       console.warn("Timezone detection error:", e);
     }
     return "Chile";
+  };
+
+  // Gatekeeper Auth State (Restricted to 5 family emails)
+  const [authenticatedUser, setAuthenticatedUser] = useState(() => {
+    const saved = localStorage.getItem('musicmap_user_email');
+    return (saved && ALLOWED_EMAILS.includes(saved.toLowerCase())) ? saved.toLowerCase() : null;
+  });
+
+  const handleLogout = () => {
+    localStorage.removeItem('musicmap_user_email');
+    setAuthenticatedUser(null);
+    showToast("Sesión cerrada");
   };
 
   const [currentSeed, setCurrentSeed] = useState(SEED_ARTISTS[0]); // Soda Stereo as initial seed
@@ -218,6 +231,11 @@ export default function App() {
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       
+      {/* Restricted Access Gatekeeper Modal */}
+      {!authenticatedUser && (
+        <AuthGatekeeperModal onAuthenticate={setAuthenticatedUser} />
+      )}
+
       {/* Navbar Control Header */}
       <HeaderControl
         onSelectSeed={setCurrentSeed}
@@ -232,6 +250,8 @@ export default function App() {
         onOpenCart={() => setIsCartModalOpen(true)}
         nodesLimit={nodesLimit}
         setNodesLimit={setNodesLimit}
+        authenticatedUser={authenticatedUser}
+        onLogout={handleLogout}
       />
 
       {/* Main Canvas Force Graph */}

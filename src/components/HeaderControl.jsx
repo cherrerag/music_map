@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Sparkles, SlidersHorizontal, MapPin, Share2, Globe, Disc } from 'lucide-react';
+import { Search, Sparkles, SlidersHorizontal, MapPin, Share2, Globe, Disc, LogOut, User } from 'lucide-react';
 import { SEED_ARTISTS } from '../data/musicData';
 
 export default function HeaderControl({
@@ -14,7 +14,9 @@ export default function HeaderControl({
   playlistCartCount = 0,
   onOpenCart,
   nodesLimit = 10,
-  setNodesLimit
+  setNodesLimit,
+  authenticatedUser,
+  onLogout
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -339,6 +341,23 @@ export default function HeaderControl({
         >
           🛒 Playlist ({playlistCartCount})
         </button>
+
+        {/* User Account Badge & Logout */}
+        {authenticatedUser && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.06)', padding: '6px 12px', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
+            <User size={14} color="#00d2ff" />
+            <span style={{ fontSize: '0.78rem', color: '#e0f2fe', fontWeight: 600 }}>
+              {authenticatedUser.split('@')[0]}
+            </span>
+            <button
+              onClick={onLogout}
+              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', marginLeft: '4px' }}
+              title="Cerrar Sesión"
+            >
+              <LogOut size={14} />
+            </button>
+          </div>
+        )}
 
         {/* Share Button */}
         <button className="btn-primary" onClick={onShareMap} style={{ padding: '8px 14px' }}>
