@@ -25,6 +25,7 @@ export default function App() {
   const [userCountry, setUserCountry] = useState(detectUserCountry);
   const [similarityThreshold, setSimilarityThreshold] = useState(0.70);
   const [onlyLocal, setOnlyLocal] = useState(false);
+  const [nodesLimit, setNodesLimit] = useState(10); // Default to 10 similar artists for richer discovery
   const [selectedNode, setSelectedNode] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
@@ -85,7 +86,7 @@ export default function App() {
 
     async function loadNetwork() {
       try {
-        const response = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(seedName)}&user_country=${encodeURIComponent(userCountry)}`);
+        const response = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(seedName)}&user_country=${encodeURIComponent(userCountry)}&limit=${nodesLimit}`);
         if (response.ok) {
           const data = await response.json();
           if (data && data.nodes && data.nodes.length > 0) {
@@ -110,7 +111,7 @@ export default function App() {
         genres: seedObj.genres
       };
 
-      const similarNodes = (seedObj.similar || []).map(sim => ({
+      const similarNodes = (seedObj.similar || []).slice(0, nodesLimit).map(sim => ({
         id: sim.id,
         name: sim.name,
         country: sim.country,
@@ -119,7 +120,7 @@ export default function App() {
         genres: sim.genres
       }));
 
-      const links = (seedObj.similar || []).map(sim => ({
+      const links = (seedObj.similar || []).slice(0, nodesLimit).map(sim => ({
         source: seedObj.id,
         target: sim.id,
         weight: sim.similarity
@@ -134,7 +135,7 @@ export default function App() {
     }
 
     loadNetwork();
-  }, [currentSeed, userCountry]);
+  }, [currentSeed, userCountry, nodesLimit]);
 
   // Handler for expanding network from any node dynamically
   const handleExpandNode = async (nodeToExpand) => {
@@ -147,7 +148,7 @@ export default function App() {
 
     // 1. Try backend serverless API
     try {
-      const res = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(cleanName)}&user_country=${encodeURIComponent(userCountry)}`);
+      const res = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(cleanName)}&user_country=${encodeURIComponent(userCountry)}&limit=${nodesLimit}`);
       if (res.ok) {
         const data = await res.json();
         if (data && data.nodes && data.nodes.length > 0) {
@@ -169,7 +170,7 @@ export default function App() {
 
     // 2. Direct browser fetch from Last.fm API as client-side fallback
     try {
-      const lastfmRes = await fetch(`https://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=${encodeURIComponent(cleanName)}&api_key=b25b959554ed76058ac220b7b2e0a026&format=json&limit=6`);
+      const lastfmRes = await fetch(`https://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=${encodeURIComponent(cleanName)}&api_key=b25b959554ed76058ac220b7b2e0a026&format=json&limit=${nodesLimit}`);
       if (lastfmRes.ok) {
         const data = await lastfmRes.json();
         const similar = data?.similarartists?.artist;
@@ -189,7 +190,7 @@ export default function App() {
             const addedLinks = addedNodes.map((n, i) => ({
               source: nodeToExpand.id,
               target: n.id,
-              weight: 0.85 - i * 0.05
+              weight: 0.85 - i * 0.04
             }));
 
             return {
@@ -229,6 +230,8 @@ export default function App() {
         onShareMap={handleShareMap}
         playlistCartCount={playlistCart.length}
         onOpenCart={() => setIsCartModalOpen(true)}
+        nodesLimit={nodesLimit}
+        setNodesLimit={setNodesLimit}
       />
 
       {/* Main Canvas Force Graph */}

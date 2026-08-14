@@ -12,7 +12,9 @@ export default function HeaderControl({
   setOnlyLocal,
   onShareMap,
   playlistCartCount = 0,
-  onOpenCart
+  onOpenCart,
+  nodesLimit = 10,
+  setNodesLimit
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -275,6 +277,33 @@ export default function HeaderControl({
         >
           <Globe size={15} /> {onlyLocal ? 'Solo Escena Local' : 'Escena Global'}
         </button>
+
+        {/* Network Density (Nodes Limit) Selector */}
+        {setNodesLimit && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            <Sparkles size={15} style={{ color: '#8b5cf6' }} />
+            <span>Afines:</span>
+            <select
+              value={nodesLimit}
+              onChange={(e) => setNodesLimit(parseInt(e.target.value))}
+              style={{
+                background: 'rgba(255, 255, 255, 0.08)',
+                color: '#fff',
+                border: '1px solid var(--border-glass)',
+                padding: '6px 10px',
+                borderRadius: '8px',
+                fontSize: '0.8rem',
+                outline: 'none',
+                cursor: 'pointer',
+                fontWeight: 600
+              }}
+            >
+              <option value="6">6 Afines (Enfoque)</option>
+              <option value="10">10 Afines (Estándar)</option>
+              <option value="15">15 Afines (Galaxia)</option>
+            </select>
+          </div>
+        )}
 
         {/* Similarity Threshold Slider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px' }}>
