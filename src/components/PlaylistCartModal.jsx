@@ -69,17 +69,44 @@ export default function PlaylistCartModal({
     URL.revokeObjectURL(url);
   };
 
-  const handleCopyText = () => {
-    const text = playlistCart.map((t, i) => `${i + 1}. ${t.artistName} - ${t.title}`).join('\n');
-    navigator.clipboard.writeText(`Playlist: ${playlistTitle}\n\n${text}`);
-    setCopiedToast(true);
-    setTimeout(() => setCopiedToast(false), 2500);
+  const handleExportCSV = () => {
+    let content = "Track Name,Artist Name,Album Name\n";
+    playlistCart.forEach(t => {
+      const cleanTrack = (t.title || '').replace(/"/g, '""');
+      const cleanArtist = (t.artistName || '').replace(/"/g, '""');
+      const cleanAlbum = (t.album || '').replace(/"/g, '""');
+      content += `"${cleanTrack}","${cleanArtist}","${cleanAlbum}"\n`;
+    });
+
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${playlistTitle.replace(/[^a-zA-Z0-9\s]/g, '').trim() || 'playlist'}_tidal.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   const handleOpenInTidal = () => {
-    // Open TIDAL search with primary track or playlist name
-    const query = playlistCart.length > 0 ? `${playlistCart[0].artistName} ${playlistCart[0].title}` : playlistTitle;
-    window.open(`https://listen.tidal.com/search?q=${encodeURIComponent(query)}`, '_blank');
+    if (playlistCart.length === 0) return;
+
+    // 1. Copy list formatted for TIDAL bulk search
+    const text = playlistCart.map(t => `${t.artistName} - ${t.title}`).join('\n');
+    navigator.clipboard.writeText(text);
+    setCopiedToast(true);
+    setTimeout(() => setCopiedToast(false), 3000);
+
+    // 2. Open Soundiiz TIDAL importer / TIDAL search directly
+    const firstTrack = playlistCart[0];
+    const tidalSearchUrl = `https://listen.tidal.com/search/tracks?q=${encodeURIComponent(firstTrack.artistName + ' ' + firstTrack.title)}`;
+    window.open(tidalSearchUrl, '_blank');
+
+    // 3. Optionally open Soundiiz direct TIDAL webkit in background
+    setTimeout(() => {
+      window.open('https://soundiiz.com/webkit/tidal', '_blank');
+    }, 400);
   };
 
   return (
@@ -278,6 +305,16 @@ export default function PlaylistCartModal({
             </button>
 
             <button 
+              onClick={handleExportCSV}
+              disabled={playlistCart.length === 0}
+              className="btn-secondary"
+              style={{ fontSize: '0.8rem', gap: '6px', opacity: playlistCart.length === 0 ? 0.5 : 1, borderColor: '#00d2ff', color: '#7dd3fc' }}
+              title="Descargar archivo CSV formateado para importar en TIDAL / Soundiiz"
+            >
+              <Download size={14} /> Descargar CSV (TIDAL)
+            </button>
+
+            <button 
               onClick={handleExportM3U}
               disabled={playlistCart.length === 0}
               className="btn-secondary"
@@ -300,7 +337,7 @@ export default function PlaylistCartModal({
                 opacity: playlistCart.length === 0 ? 0.5 : 1
               }}
             >
-              Exportar a TIDAL 🌊 <ExternalLink size={14} />
+              Abrir e Importar en TIDAL 🌊 <ExternalLink size={14} />
             </button>
           </div>
         </div>

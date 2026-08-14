@@ -39,12 +39,12 @@ export default function ArtistSidebar({
     previewUrl: ""
   };
 
-  // Fetch Top 10 real tracks from iTunes API for the artist
+  // Fetch Top 20 real tracks from iTunes API for the artist
   useEffect(() => {
     let isCancelled = false;
     if (!cleanArtistName) return;
 
-    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanArtistName)}&entity=song&limit=10`)
+    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanArtistName)}&entity=song&limit=20`)
       .then(res => res.json())
       .then(data => {
         if (!isCancelled && data.results && data.results.length > 0) {
@@ -59,7 +59,7 @@ export default function ArtistSidebar({
           setDynamicTracks(tracks);
         }
       })
-      .catch(err => console.error("iTunes dynamic 10-track fetch error:", err));
+      .catch(err => console.error("iTunes dynamic 20-track fetch error:", err));
 
     return () => {
       isCancelled = true;
@@ -390,7 +390,7 @@ export default function ArtistSidebar({
                 </span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '220px', overflowY: 'auto', paddingRight: '4px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '260px', overflowY: 'auto', paddingRight: '4px' }}>
                 {activeTracks.map((track, idx) => {
                   const isSelected = idx === currentTrackIndex;
                   const inCart = isTrackInCart(track);
