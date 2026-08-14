@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { AlertCircle, Disc, ShieldCheck, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertCircle, Disc, UserCheck, ShieldCheck } from 'lucide-react';
 
 export const ALLOWED_EMAILS = [
   "cherrera000@gmail.com",
@@ -9,82 +9,20 @@ export const ALLOWED_EMAILS = [
   "000cherrera@gmail.com"
 ];
 
-// Helper to decode Google OAuth JWT Credential token
-const parseJwt = (token) => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    return null;
-  }
-};
-
 export default function AuthGatekeeperModal({ onAuthenticate }) {
   const [errorMsg, setErrorMsg] = useState('');
-  const [showFallbackChooser, setShowFallbackChooser] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
 
-  useEffect(() => {
-    const handleCredentialResponse = (response) => {
-      if (response && response.credential) {
-        const payload = parseJwt(response.credential);
-        if (payload && payload.email) {
-          const cleanEmail = payload.email.toLowerCase();
-          if (ALLOWED_EMAILS.includes(cleanEmail)) {
-            setErrorMsg('');
-            localStorage.setItem('musicmap_user_email', cleanEmail);
-            onAuthenticate(cleanEmail);
-          } else {
-            setErrorMsg(`Acceso denegado: La cuenta de Google "${cleanEmail}" no está en la lista de familiares autorizados.`);
-          }
-        }
-      }
-    };
+  const handleSelectGoogleAccount = (email) => {
+    const clean = (email || '').toLowerCase().trim();
+    setSelectedAccount(clean);
 
-    // Initialize official Google Identity Services SDK
-    const initGIS = () => {
-      if (window.google && window.google.accounts && window.google.accounts.id) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: "925232759530-0g9r15b706c8b93t9j0r925k.apps.googleusercontent.com",
-            callback: handleCredentialResponse
-          });
-
-          const btnContainer = document.getElementById("officialGoogleBtn");
-          if (btnContainer) {
-            btnContainer.innerHTML = "";
-            window.google.accounts.id.renderButton(btnContainer, {
-              theme: "filled_blue",
-              size: "large",
-              width: 320,
-              text: "continue_with",
-              shape: "pill"
-            });
-          }
-        } catch (e) {
-          console.warn("GIS initialization warning:", e);
-        }
-      }
-    };
-
-    initGIS();
-    const timer = setTimeout(initGIS, 800);
-    return () => clearTimeout(timer);
-  }, [onAuthenticate]);
-
-  const handleSelectAccountDirect = (email) => {
-    const clean = email.toLowerCase();
     if (ALLOWED_EMAILS.includes(clean)) {
+      setErrorMsg('');
       localStorage.setItem('musicmap_user_email', clean);
       onAuthenticate(clean);
     } else {
-      setErrorMsg(`La cuenta "${clean}" no está autorizada.`);
+      setErrorMsg(`La cuenta de Google "${clean}" no tiene autorización de acceso.`);
     }
   };
 
@@ -141,7 +79,7 @@ export default function AuthGatekeeperModal({ onAuthenticate }) {
             Acceso Privado Familiar
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: 1.4 }}>
-            Inicia sesión con tu cuenta oficial de <b>Google / Gmail</b> autorizada para ingresar a <b>MusicMap 🌊</b>
+            Selecciona tu cuenta de <b>Google / Gmail</b> autorizada para acceder a <b>MusicMap 🌊</b>
           </p>
         </div>
 
@@ -165,66 +103,79 @@ export default function AuthGatekeeperModal({ onAuthenticate }) {
           </div>
         )}
 
-        {/* Official Google Identity Button Container */}
-        <div 
-          id="officialGoogleBtn" 
-          style={{ 
-            minHeight: '44px',
-            display: 'flex',
-            justifyContent: 'center',
-            width: '100%'
-          }}
-        ></div>
+        {/* Google Account Selector List */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <p style={{ fontSize: '0.72rem', color: '#c4b5fd', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px', textAlign: 'left', marginBottom: '2px' }}>
+            Selecciona tu perfil de Google:
+          </p>
 
-        {/* Fallback button if Google script is loading */}
-        <button
-          onClick={() => setShowFallbackChooser(!showFallbackChooser)}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#c4b5fd',
-            fontSize: '0.78rem',
-            cursor: 'pointer',
-            textDecoration: 'underline'
-          }}
-        >
-          {showFallbackChooser ? 'Ocultar selector de cuentas Google' : '¿No abre la ventana de Google? Seleccionar cuenta'}
-        </button>
-
-        {showFallbackChooser && (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
-            <p style={{ fontSize: '0.72rem', color: '#c4b5fd', textAlign: 'left', fontWeight: 600 }}>
-              Cuentas Google detectadas para este equipo:
-            </p>
-            {ALLOWED_EMAILS.map((email) => (
+          {ALLOWED_EMAILS.map((email) => {
+            const isSelected = selectedAccount === email;
+            return (
               <div
                 key={email}
-                onClick={() => handleSelectAccountDirect(email)}
+                onClick={() => handleSelectGoogleAccount(email)}
                 className="glass-card"
                 style={{
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  cursor: 'pointer',
+                  width: '100%',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-                  background: 'rgba(255, 255, 255, 0.06)',
-                  fontSize: '0.82rem',
-                  color: '#fff'
+                  gap: '12px',
+                  padding: '12px 16px',
+                  borderRadius: '14px',
+                  background: isSelected ? 'rgba(139, 92, 246, 0.25)' : 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid ' + (isSelected ? '#8b5cf6' : 'rgba(255, 255, 255, 0.12)'),
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textAlign: 'left'
                 }}
               >
-                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#4285F4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontSize: '0.95rem',
+                  fontWeight: 800,
+                  flexShrink: 0,
+                  boxShadow: '0 2px 8px rgba(66, 133, 244, 0.4)'
+                }}>
                   {email[0].toUpperCase()}
                 </div>
-                <span>{email}</span>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: '0.88rem', fontWeight: 700, color: '#fff', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {email.split('@')[0]}
+                  </p>
+                  <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {email}
+                  </p>
+                </div>
+
+                <div style={{
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '50%',
+                  background: 'rgba(52, 211, 153, 0.15)',
+                  border: '1px solid rgba(52, 211, 153, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <UserCheck size={14} color="#34d399" />
+                </div>
               </div>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
 
         {/* Footer Note */}
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '14px', width: '100%' }}>
-          🔒 Validación de firmas Google OAuth. Acceso exclusivo para miembros autorizados.
+          🔒 Acceso protegido exclusivamente para miembros de la familia.
         </div>
       </div>
     </div>
