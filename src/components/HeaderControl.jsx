@@ -10,7 +10,9 @@ export default function HeaderControl({
   setSimilarityThreshold,
   onlyLocal,
   setOnlyLocal,
-  onShareMap
+  onShareMap,
+  playlistCartCount = 0,
+  onOpenCart
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -291,6 +293,23 @@ export default function HeaderControl({
             {Math.round(similarityThreshold * 100)}%
           </span>
         </div>
+
+        {/* Playlist Cart Button */}
+        <button
+          onClick={onOpenCart}
+          className="btn-primary"
+          style={{
+            padding: '8px 14px',
+            background: playlistCartCount > 0 ? 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)' : 'rgba(255, 255, 255, 0.08)',
+            borderColor: playlistCartCount > 0 ? '#00d2ff' : 'var(--border-glass)',
+            color: '#fff',
+            fontWeight: 700,
+            boxShadow: playlistCartCount > 0 ? '0 0 16px rgba(0, 210, 255, 0.4)' : 'none',
+            position: 'relative'
+          }}
+        >
+          🛒 Playlist ({playlistCartCount})
+        </button>
 
         {/* Share Button */}
         <button className="btn-primary" onClick={onShareMap} style={{ padding: '8px 14px' }}>

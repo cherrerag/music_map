@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Play, Pause, ExternalLink, Network, Sparkles, MapPin, Music, Heart, Disc, Volume2, VolumeX } from 'lucide-react';
+import { X, Play, Pause, ExternalLink, Network, Sparkles, MapPin, Music, Heart, Disc, Volume2, VolumeX, Plus, Check } from 'lucide-react';
 import { getArtistDetails } from '../data/musicData';
 
-export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
+export default function ArtistSidebar({ 
+  selectedNode, 
+  onClose, 
+  onExpandNode,
+  onAddToPlaylist,
+  playlistCart = []
+}) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
@@ -21,7 +27,7 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
     .replace(/ (Session|Constelación Local|Onda Sintética|Colectivo Fusión|expanded-\d+|Fans|sim-\d+)/gi, '')
     .trim();
 
-  // Active track list (prioritizing dynamic iTunes 3-track real search)
+  // Active track list (prioritizing dynamic iTunes 10-track real search)
   const activeTracks = (dynamicTracks && dynamicTracks.length > 0) 
     ? dynamicTracks 
     : (artist?.topTracks && artist.topTracks[0]?.previewUrl ? artist.topTracks : null);
@@ -33,18 +39,19 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
     previewUrl: ""
   };
 
-  // Fetch Top 3 real tracks from iTunes API for the artist
+  // Fetch Top 10 real tracks from iTunes API for the artist
   useEffect(() => {
     let isCancelled = false;
     if (!cleanArtistName) return;
 
-    // Fetch top 3 tracks with real song titles and audio previews
-    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanArtistName)}&entity=song&limit=3`)
+    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanArtistName)}&entity=song&limit=10`)
       .then(res => res.json())
       .then(data => {
         if (!isCancelled && data.results && data.results.length > 0) {
           const tracks = data.results.map(item => ({
+            id: item.trackId ? String(item.trackId) : `${cleanArtistName}-${item.trackName}`,
             title: item.trackName || cleanArtistName,
+            artistName: item.artistName || cleanArtistName,
             album: item.collectionName || "Single",
             duration: "0:30",
             previewUrl: item.previewUrl
@@ -52,12 +59,17 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
           setDynamicTracks(tracks);
         }
       })
-      .catch(err => console.error("iTunes dynamic 3-track fetch error:", err));
+      .catch(err => console.error("iTunes dynamic 10-track fetch error:", err));
 
     return () => {
       isCancelled = true;
     };
   }, [artist?.id, cleanArtistName]);
+
+  // Check if a track is in the playlist cart
+  const isTrackInCart = (track) => {
+    return playlistCart.some(item => item.title.toLowerCase() === track.title.toLowerCase() && item.artistName.toLowerCase() === (track.artistName || cleanArtistName).toLowerCase());
+  };
 
   // Reset audio & state on artist node change
   useEffect(() => {
@@ -366,48 +378,94 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
             </div>
           )}
 
-          {/* Top Tracks List */}
+          {/* Top 10 Tracks List with Add to Playlist (+) Buttons */}
           {activeTracks && activeTracks.length > 0 && (
             <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '10px' }}>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
-                Top Canciones
-              </span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                  Top Canciones ({activeTracks.length})
+                </span>
+                <span style={{ fontSize: '0.7rem', color: '#c4b5fd' }}>
+                  Añade a tu Playlist 🛒
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', maxHeight: '220px', overflowY: 'auto', paddingRight: '4px' }}>
                 {activeTracks.map((track, idx) => {
                   const isSelected = idx === currentTrackIndex;
+                  const inCart = isTrackInCart(track);
+
                   return (
-                    <button
+                    <div
                       key={idx}
-                      onClick={() => togglePlay(idx)}
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         padding: '6px 8px',
                         borderRadius: '6px',
-                        background: isSelected ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
-                        border: 'none',
-                        color: isSelected ? '#fff' : 'var(--text-secondary)',
-                        fontSize: '0.8rem',
-                        textAlign: 'left',
-                        cursor: 'pointer',
+                        background: isSelected ? 'rgba(139, 92, 246, 0.25)' : 'rgba(255, 255, 255, 0.03)',
+                        border: '1px solid ' + (isSelected ? 'rgba(139, 92, 246, 0.4)' : 'transparent'),
                         transition: 'background 0.2s ease'
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, overflow: 'hidden' }}>
+                      <button
+                        onClick={() => togglePlay(idx)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          minWidth: 0,
+                          flex: 1,
+                          background: 'none',
+                          border: 'none',
+                          color: isSelected ? '#fff' : 'var(--text-secondary)',
+                          fontSize: '0.8rem',
+                          textAlign: 'left',
+                          cursor: 'pointer'
+                        }}
+                      >
                         {isSelected && isPlaying ? (
                           <Pause size={14} style={{ color: '#8b5cf6', flexShrink: 0 }} />
                         ) : (
                           <Play size={14} style={{ opacity: isSelected ? 1 : 0.6, flexShrink: 0 }} />
                         )}
-                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: isSelected ? 600 : 400 }}>
-                          {track.title}
-                        </span>
-                      </div>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginLeft: '8px', flexShrink: 0 }}>
-                        {track.duration}
-                      </span>
-                    </button>
+                        <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                          <p style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontWeight: isSelected ? 700 : 500, fontSize: '0.8rem' }}>
+                            {track.title}
+                          </p>
+                        </div>
+                      </button>
+
+                      {/* Add to Playlist (+) Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onAddToPlaylist) {
+                            onAddToPlaylist(track, artist);
+                          }
+                        }}
+                        style={{
+                          background: inCart ? 'rgba(16, 185, 129, 0.2)' : 'rgba(139, 92, 246, 0.2)',
+                          border: '1px solid ' + (inCart ? 'rgba(16, 185, 129, 0.4)' : 'rgba(139, 92, 246, 0.4)'),
+                          color: inCart ? '#34d399' : '#c4b5fd',
+                          borderRadius: '6px',
+                          padding: '4px 8px',
+                          fontSize: '0.72rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          cursor: 'pointer',
+                          marginLeft: '8px',
+                          flexShrink: 0,
+                          fontWeight: 600
+                        }}
+                        title={inCart ? "En la Playlist" : "Añadir a Playlist"}
+                      >
+                        {inCart ? <Check size={12} /> : <Plus size={12} />}
+                        {inCart ? 'Añadido' : 'Playlist'}
+                      </button>
+                    </div>
                   );
                 })}
               </div>

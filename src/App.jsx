@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import HeaderControl from './components/HeaderControl';
 import NetworkGraph from './components/NetworkGraph';
 import ArtistSidebar from './components/ArtistSidebar';
+import PlaylistCartModal from './components/PlaylistCartModal';
 import { SEED_ARTISTS, getArtistDetails } from './data/musicData';
 import { Sparkles, Info, Check } from 'lucide-react';
 
@@ -27,8 +28,50 @@ export default function App() {
   const [selectedNode, setSelectedNode] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
 
+  // Playlist Cart State & Modal toggle
+  const [playlistCart, setPlaylistCart] = useState([]);
+  const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+
   // Graph state (nodes and links)
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
+
+  // Add track to playlist cart
+  const handleAddToPlaylist = (track, artist) => {
+    const item = {
+      id: track.id || `${artist.name}-${track.title}`,
+      title: track.title,
+      artistName: track.artistName || artist.name,
+      album: track.album || "Single",
+      previewUrl: track.previewUrl || "",
+      tidalUrl: artist.tidal_url || `https://listen.tidal.com/search?q=${encodeURIComponent(artist.name + ' ' + track.title)}`
+    };
+
+    setPlaylistCart(prev => {
+      const exists = prev.some(t => t.title.toLowerCase() === item.title.toLowerCase() && t.artistName.toLowerCase() === item.artistName.toLowerCase());
+      if (exists) {
+        showToast(`"${item.title}" ya está en tu playlist`);
+        return prev;
+      }
+      showToast(`¡"${item.title}" añadida a la playlist! 🛒`);
+      return [...prev, item];
+    });
+  };
+
+  // Remove track from playlist cart
+  const handleRemoveFromPlaylist = (indexToRemove) => {
+    setPlaylistCart(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  // Clear playlist cart
+  const handleClearPlaylist = () => {
+    setPlaylistCart([]);
+    showToast("Playlist vaciada");
+  };
+
+  // Reorder playlist cart
+  const handleReorderPlaylist = (newCart) => {
+    setPlaylistCart(newCart);
+  };
 
   // Generate initial graph from seed artist (with FastAPI backend fetch + local fallback)
   useEffect(() => {
@@ -183,6 +226,8 @@ export default function App() {
         onlyLocal={onlyLocal}
         setOnlyLocal={setOnlyLocal}
         onShareMap={handleShareMap}
+        playlistCartCount={playlistCart.length}
+        onOpenCart={() => setIsCartModalOpen(true)}
       />
 
       {/* Main Canvas Force Graph */}
@@ -203,8 +248,20 @@ export default function App() {
           selectedNode={selectedNode}
           onClose={() => setSelectedNode(null)}
           onExpandNode={handleExpandNode}
+          onAddToPlaylist={handleAddToPlaylist}
+          playlistCart={playlistCart}
         />
       )}
+
+      {/* Playlist Cart Modal */}
+      <PlaylistCartModal
+        isOpen={isCartModalOpen}
+        onClose={() => setIsCartModalOpen(false)}
+        playlistCart={playlistCart}
+        onRemoveTrack={handleRemoveFromPlaylist}
+        onClearPlaylist={handleClearPlaylist}
+        onReorderTracks={handleReorderPlaylist}
+      />
 
       {/* Toast Notification */}
       {toastMessage && (
