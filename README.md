@@ -28,14 +28,17 @@ npm run dev -- --port 3000
 music_map/
 ├── PDR_musicmap                 # Documento de Requerimientos y Hoja de Ruta
 ├── README.md                    # Bitácora, Guía de Retoma y Registro de Deudas (Este archivo)
-├── index.html                   # HTML base de la aplicación
-├── package.json                 # Dependencias React + Vite
+├── DEPLOYMENT.md                # Guía paso a paso para Vercel, Render y Docker
+├── vercel.json                  # Configuración de compilación y SPA routing para Vercel
+├── render.yaml                  # Blueprint para despliegue automático del backend en Render
+├── docker-compose.yml           # Orquestador Docker Compose para servidor VPS / Local
 ├── backend/                     # Servidor FastAPI en Python
 │   ├── main.py                  # Endpoints REST (/api/health, /api/search, /api/network)
 │   ├── config.py                # Carga de credenciales y variables de entorno
 │   ├── requirements.txt         # Dependencias (fastapi, uvicorn, httpx, python-dotenv)
-│   ├── .env.example             # Plantilla de credenciales de Spotify y Last.fm
+│   ├── .env.example             # Plantilla de credenciales (TIDAL, Last.fm, Spotify)
 │   └── services/
+│       ├── tidal_service.py     # Integración nativa con TIDAL API y enlaces de reproducción
 │       ├── spotify_service.py   # Client Credentials Flow & búsqueda de artistas
 │       ├── lastfm_service.py    # Similitud y subgéneros (artist.getSimilar)
 │       ├── musicbrainz_service.py # Origen enciclopédico (país/ciudad) con caché
@@ -45,7 +48,7 @@ music_map/
     ├── index.css                # Sistema de diseño Space Dark, Neon y Glassmorphic
     ├── components/
     │   ├── NetworkGraph.jsx     # Motor de físicas 2D Canvas con d3-force
-    │   ├── ArtistSidebar.jsx    # Ficha técnica de artista, motor HTML5 Audio y botón Expandir Red
+    │   ├── ArtistSidebar.jsx    # Ficha de artista (Botón TIDAL 🌊, HTML5 Audio y Expandir Red)
     │   └── HeaderControl.jsx    # Navbar, buscador autocomplete en vivo y controles del grafo
     └── data/
         └── musicData.js         # Dataset simulado de fallback y helper de metadatos
@@ -57,7 +60,7 @@ music_map/
 
 ### 🟢 Fase 1: Definición de PDR (Completado)
 - Creación y depuración del archivo `PDR_musicmap`.
-- Definición de arquitectura de datos (Spotify, Last.fm, MusicBrainz) y esquema de nodos `Artist` y relaciones `SIMILAR_TO`.
+- Definición de arquitectura de datos (TIDAL, Last.fm, MusicBrainz, Spotify) y esquema de nodos `Artist`.
 
 ### 🟢 Fase 2: Prototipo Frontend Local (Completado)
 - [x] **Grafo de Red Interactivo (D3-Force + Canvas 2D):** Atracción, repulsión, arrastre de nodos, zoom y panorámica.
@@ -67,18 +70,19 @@ music_map/
 - [x] **Motor de Audio Preview HTML5:** Reproductor de clips de 30s con barra de progreso, control de mute y lista de top canciones.
 - [x] **Repositorio Git:** Inicializado con commit raíz en rama `main`.
 
-### 🟢 Fase 3: Integración de Backend FastAPI & APIs Reales (Completado)
+### 🟢 Fase 3: Integración de Backend FastAPI & TIDAL (Completado)
 - [x] **Backend FastAPI:** Estructurado en `backend/` con soporte para CORS y endpoints REST.
-- [x] **Cliente Spotify API:** Autenticación automática vía Client Credentials Flow (`search_artists`, `get_related_artists`, `get_top_tracks`).
+- [x] **Cliente TIDAL API:** Enlaces directos a la app/web de TIDAL (`Escuchar en TIDAL 🌊`) y cliente en `backend/services/tidal_service.py`.
 - [x] **Cliente Last.fm API:** Obtención de similitudes reales (`artist.getSimilar`) y subgéneros (`artist.getTopTags`).
 - [x] **Cliente MusicBrainz API:** Resolución de países y ciudades de origen con sistema de caché en memoria.
-- [x] **Conexión Frontend:** `src/App.jsx` y `src/components/HeaderControl.jsx` consultan `http://localhost:8000/api/network` en vivo con fallback transparente.
+- [x] **Conexión Frontend:** `src/App.jsx` y `src/components/HeaderControl.jsx` consultan el backend en vivo con fallback transparente.
 
 ### 🟢 Fase 4: Preparación para Despliegue en Producción (Completado)
+- [x] **Soporte Vercel:** Creado `vercel.json` para enrutamiento SPA automático.
+- [x] **Soporte Render:** Creado `render.yaml` Blueprint para despliegue sin configuración manual del backend en Render.
 - [x] **Containerización Docker:** Creados `Dockerfile` (Multi-stage Node+Nginx para Frontend) y `backend/Dockerfile` (Python slim).
 - [x] **Orquestador Docker Compose:** Archivo `docker-compose.yml` para ejecutar toda la pila con `docker compose up -d`.
-- [x] **Soporte Multi-Entorno:** Variable `VITE_API_URL` configurada dinámicamente en el frontend.
-- [x] **Guía de Despliegue:** Documento `DEPLOYMENT.md` con instrucciones paso a paso para Vercel, Render, Railway y VPS.
+- [x] **Guía de Despliegue:** Documento `DEPLOYMENT.md` actualizado.
 
 ---
 
