@@ -21,10 +21,11 @@ export default function App() {
     if (!currentSeed) return;
 
     const seedName = typeof currentSeed === 'string' ? currentSeed : currentSeed.name;
+    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
     async function loadNetwork() {
       try {
-        const response = await fetch(`http://localhost:8000/api/network?artist=${encodeURIComponent(seedName)}&user_country=${encodeURIComponent(userCountry)}`);
+        const response = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(seedName)}&user_country=${encodeURIComponent(userCountry)}`);
         if (response.ok) {
           const data = await response.json();
           if (data && data.nodes && data.nodes.length > 0) {

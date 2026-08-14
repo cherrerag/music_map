@@ -74,6 +74,12 @@ music_map/
 - [x] **Cliente MusicBrainz API:** Resolución de países y ciudades de origen con sistema de caché en memoria.
 - [x] **Conexión Frontend:** `src/App.jsx` y `src/components/HeaderControl.jsx` consultan `http://localhost:8000/api/network` en vivo con fallback transparente.
 
+### 🟢 Fase 4: Preparación para Despliegue en Producción (Completado)
+- [x] **Containerización Docker:** Creados `Dockerfile` (Multi-stage Node+Nginx para Frontend) y `backend/Dockerfile` (Python slim).
+- [x] **Orquestador Docker Compose:** Archivo `docker-compose.yml` para ejecutar toda la pila con `docker compose up -d`.
+- [x] **Soporte Multi-Entorno:** Variable `VITE_API_URL` configurada dinámicamente en el frontend.
+- [x] **Guía de Despliegue:** Documento `DEPLOYMENT.md` con instrucciones paso a paso para Vercel, Render, Railway y VPS.
+
 ---
 
 ## 🛠️ Registro de Deuda Técnica y Backlog
