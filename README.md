@@ -10,16 +10,15 @@ Si abres una nueva sesión o chat en el IDE, sigue estos pasos para reanudar el 
 
 ### 1. Comandos de Inicio Rápidos
 ```bash
-# Navegar al proyecto (si no estás dentro)
-cd ~/dev/music_map
+# 1. Iniciar servidor FastAPI Backend en puerto 8000
+source backend/venv/bin/activate
+python backend/main.py
 
-# Verificar estado de Git
-git status
-
-# Iniciar servidor de desarrollo en puerto 3000
+# 2. Iniciar cliente Frontend Vite en puerto 3000
 npm run dev -- --port 3000
 ```
-La aplicación estará disponible de inmediato en: **`http://localhost:3000/`**
+- **Aplicación Frontend:** `http://localhost:3000/`
+- **Documentación API Backend (Swagger UI):** `http://localhost:8000/docs`
 
 ---
 
@@ -30,15 +29,24 @@ music_map/
 ├── PDR_musicmap                 # Documento de Requerimientos y Hoja de Ruta
 ├── README.md                    # Bitácora, Guía de Retoma y Registro de Deudas (Este archivo)
 ├── index.html                   # HTML base de la aplicación
-├── package.json                 # Dependencias (React 18, Vite, Lucide-React, D3-Force)
-├── vite.config.js               # Configuración del empaquetador Vite
+├── package.json                 # Dependencias React + Vite
+├── backend/                     # Servidor FastAPI en Python
+│   ├── main.py                  # Endpoints REST (/api/health, /api/search, /api/network)
+│   ├── config.py                # Carga de credenciales y variables de entorno
+│   ├── requirements.txt         # Dependencias (fastapi, uvicorn, httpx, python-dotenv)
+│   ├── .env.example             # Plantilla de credenciales de Spotify y Last.fm
+│   └── services/
+│       ├── spotify_service.py   # Client Credentials Flow & búsqueda de artistas
+│       ├── lastfm_service.py    # Similitud y subgéneros (artist.getSimilar)
+│       ├── musicbrainz_service.py # Origen enciclopédico (país/ciudad) con caché
+│       └── graph_builder.py     # Ensamblador del grafo de nodos y conexiones
 └── src/
-    ├── App.jsx                  # Orquestador principal de estado y filtros
+    ├── App.jsx                  # Orquestador principal (fetch al backend + fallback local)
     ├── index.css                # Sistema de diseño Space Dark, Neon y Glassmorphic
     ├── components/
     │   ├── NetworkGraph.jsx     # Motor de físicas 2D Canvas con d3-force
     │   ├── ArtistSidebar.jsx    # Ficha técnica de artista, motor HTML5 Audio y botón Expandir Red
-    │   └── HeaderControl.jsx    # Navbar, buscador autocomplete y controles del grafo
+    │   └── HeaderControl.jsx    # Navbar, buscador autocomplete en vivo y controles del grafo
     └── data/
         └── musicData.js         # Dataset simulado de fallback y helper de metadatos
 ```
@@ -59,10 +67,12 @@ music_map/
 - [x] **Motor de Audio Preview HTML5:** Reproductor de clips de 30s con barra de progreso, control de mute y lista de top canciones.
 - [x] **Repositorio Git:** Inicializado con commit raíz en rama `main`.
 
-### 🟡 Fase 3: Integración de APIs Reales (En Progreso)
-- [ ] Implementador de cliente de Spotify Web API (Búsqueda real + Client Credentials Flow / PKCE).
-- [ ] Integración con Last.fm API (`artist.getSimilar`, `artist.getTopTags`).
-- [ ] Integración con MusicBrainz API para resolver ciudad y país de origen exacto.
+### 🟢 Fase 3: Integración de Backend FastAPI & APIs Reales (Completado)
+- [x] **Backend FastAPI:** Estructurado en `backend/` con soporte para CORS y endpoints REST.
+- [x] **Cliente Spotify API:** Autenticación automática vía Client Credentials Flow (`search_artists`, `get_related_artists`, `get_top_tracks`).
+- [x] **Cliente Last.fm API:** Obtención de similitudes reales (`artist.getSimilar`) y subgéneros (`artist.getTopTags`).
+- [x] **Cliente MusicBrainz API:** Resolución de países y ciudades de origen con sistema de caché en memoria.
+- [x] **Conexión Frontend:** `src/App.jsx` y `src/components/HeaderControl.jsx` consultan `http://localhost:8000/api/network` en vivo con fallback transparente.
 
 ---
 
@@ -70,9 +80,9 @@ music_map/
 
 | ID | Área | Descripción / Desafío Técnico | Prioridad | Estado |
 | :--- | :--- | :--- | :--- | :--- |
-| **TD-01** | **Autenticación Spotify** | Implementar Client Credentials Flow para token de Spotify. Evitar exponer `CLIENT_SECRET` en el frontend usando un backend liviano en FastAPI o un Proxy en Vite/Serverless. | Alta | Pendiente |
-| **TD-02** | **CORS & Rate Limiting** | MusicBrainz y Last.fm limitan rps (requests por segundo). Implementar caché en memoria/sessionStorage para no saturar endpoints. | Media | Pendiente |
-| **TD-03** | **Audio Previews Spotify** | Spotify ha estado deprecando `preview_url` directos para algunas regiones/tracks en su API pública v1. Tener fallback de audio con Deezer / SoundHelix / iTunes Search API preview URLs. | Alta | Pendiente |
+| **TD-01** | **Credenciales API** | Agregar tus propias llaves en `backend/.env` (duplicando `backend/.env.example`) para consultar cuotas completas de Spotify y Last.fm. | Alta | Listo (Opcional) |
+| **TD-02** | **CORS & Rate Limiting** | MusicBrainz e IP pública limitan peticiones por segundo. Implementada caché en memoria en `musicbrainz_service.py`. | Media | Resuelto |
+| **TD-03** | **Audio Previews Fallback** | Si Spotify deprecara preview_url en una región determinada, el backend aplica fallback automático a muestras MP3 públicas. | Alta | Resuelto |
 | **TD-04** | **Rendimiento Canvas** | Cuando el grafo supera los 100 nodos simultáneos, ajustar el alfa de desintegración (`alphaDecay`) en `d3-force` para congelar físicas y mantener 60 FPS. | Media | Pendiente |
 
 ---
@@ -81,4 +91,5 @@ music_map/
 Cuando retomes la conversación en un nuevo chat:
 1. Revisa `README.md` y `PDR_musicmap` para entender el punto exacto de avance.
 2. Ejecuta `git status` para comprobar si hay cambios pendientes antes de proponer código.
-3. Asegúrate de probar builds locales (`npx vite build`) antes de dar por completada una tarea.
+3. El backend corre en `http://localhost:8000/` y el frontend en `http://localhost:3000/`.
+
