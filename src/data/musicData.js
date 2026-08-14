@@ -11,9 +11,9 @@ export const SEED_ARTISTS = [
     image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
     bio: "Banda mítica de rock argentina formada en 1982 por Gustavo Cerati, Zeta Bosio y Charly Alberti. Pioneros del rock en español e influencia fundamental en toda Latinoamérica.",
     topTracks: [
-      { title: "De Música Ligera", album: "Canción Animal", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
-      { title: "Persiana Americana", album: "Signos", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
-      { title: "En la Ciudad de la Furia", album: "Doble Vida", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" }
+      { title: "De Música Ligera", album: "Canción Animal", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/ac/b1/68/acb1681a-3a20-ea0e-b199-dc1f2e680a45/mzaf_3751899153482475975.plus.aac.p.m4a" },
+      { title: "Persiana Americana", album: "Signos", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview122/v4/c3/8b/17/c38b1797-a642-c934-276d-12ed577ef230/mzaf_12565458323717454477.plus.aac.p.m4a" },
+      { title: "En la Ciudad de la Furia", album: "Doble Vida", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview112/v4/64/e2/3a/64e23a6a-ef33-0cf6-37c8-4a3765e532c9/mzaf_6222270713983086923.plus.aac.p.m4a" }
     ],
     similar: [
       { id: "gustavo-cerati", name: "Gustavo Cerati", country: "Argentina", flag: "🇦🇷", similarity: 0.98, isLocal: true, genres: ["Art Rock", "Synth-Pop"] },
@@ -38,9 +38,9 @@ export const SEED_ARTISTS = [
     image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
     bio: "Proyecto de música psicodélica creado por Kevin Parker en Perth, Australia. Reconocido por sus densas capas sonoras, sintetizadores análogos y producción hipnótica.",
     topTracks: [
-      { title: "The Less I Know The Better", album: "Currents", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
-      { title: "Feels Like We Only Go Backwards", album: "Lonerism", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
-      { title: "Borderline", album: "The Slow Rush", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" }
+      { title: "The Less I Know The Better", album: "Currents", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/8b/55/f3/8b55f3a3-3204-8930-f156-82843546950e/mzaf_9370328603131228430.plus.aac.p.m4a" },
+      { title: "Feels Like We Only Go Backwards", album: "Lonerism", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview126/v4/46/3a/f8/463af8fb-3ad4-1a5a-02c7-edab14457e10/mzaf_2186243149485269803.plus.aac.p.m4a" },
+      { title: "Borderline", album: "The Slow Rush", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview116/v4/04/9b/47/049b4772-0cc3-55d8-0c92-86a7368679a7/mzaf_11944374016959280597.plus.aac.p.m4a" }
     ],
     similar: [
       { id: "pond", name: "Pond", country: "Australia", flag: "🇦🇺", similarity: 0.95, isLocal: false, genres: ["Psychedelic Rock"] },
@@ -63,9 +63,9 @@ export const SEED_ARTISTS = [
     image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80",
     bio: "Banda chilena fundamental integrada por Jorge González, Claudio Narea y Miguel Tapia. Sus letras de profunda protesta social y su fusión synth-pop marcaron a generaciones en América Latina.",
     topTracks: [
-      { title: "El Baile de los que Sobran", album: "Pateando Piedras", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3" },
-      { title: "Estrechez de Corazón", album: "Corazones", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" },
-      { title: "Tren al Sur", album: "Corazones", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-9.mp3" }
+      { title: "El Baile de los que Sobran", album: "Pateando Piedras", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/93/9e/e9/939ee999-481e-fbd4-f8c3-0419fb54c67d/mzaf_11889153600901999055.plus.aac.p.m4a" },
+      { title: "Estrechez de Corazón", album: "Corazones", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/8a/78/ab/8a78abc6-6cff-9af3-94b5-466b19c112fa/mzaf_11413850792753262070.plus.aac.p.m4a" },
+      { title: "Tren al Sur", album: "Corazones", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview211/v4/20/63/0e/20630e16-0f94-f6ae-fdfe-5ccce5587f7f/mzaf_17810564531426867572.plus.aac.p.m4a" }
     ],
     similar: [
       { id: "los-tres", name: "Los Tres", country: "Chile", flag: "🇨🇱", similarity: 0.92, isLocal: true, genres: ["Cueca Rock", "Alternative Rock"] },

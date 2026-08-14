@@ -3,6 +3,7 @@ from services.spotify_service import spotify_service
 from services.lastfm_service import lastfm_service
 from services.musicbrainz_service import musicbrainz_service
 from services.tidal_service import tidal_service
+from services.audio_service import audio_service
 
 # Flag mappings for countries
 FLAG_MAP = {
@@ -51,9 +52,10 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
     lastfm_similar_task = lastfm_service.get_similar_artists(seed_name, limit=8)
     origin_task = musicbrainz_service.get_artist_origin(seed_name)
     top_tracks_task = spotify_service.get_top_tracks(seed_id) if spotify_search else asyncio.sleep(0, result=[])
+    seed_audio_task = audio_service.get_real_audio_preview(seed_name, "Hit")
 
-    related_spotify, similar_lastfm, origin_mb, top_tracks = await asyncio.gather(
-        spotify_related_task, lastfm_similar_task, origin_task, top_tracks_task
+    related_spotify, similar_lastfm, origin_mb, top_tracks, seed_audio_url = await asyncio.gather(
+        spotify_related_task, lastfm_similar_task, origin_task, top_tracks_task, seed_audio_task
     )
 
     seed_country = origin_mb.get("country", "Desconocido")
@@ -73,7 +75,7 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
         "isLocal": seed_country == user_country or seed_country in ["Chile", "CL"],
         "tidal_url": tidal_service.get_tidal_url(seed_name),
         "topTracks": top_tracks or [
-          {"title": f"Single Principal - {seed_name}", "album": "Hits", "duration": "0:30", "previewUrl": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"}
+          {"title": f"Single Principal - {seed_name}", "album": "Hits", "duration": "0:30", "previewUrl": seed_audio_url}
         ]
     }]
 
@@ -110,10 +112,13 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
         else:
             candidates[c_id]["similarity"] = round(max(candidates[c_id]["similarity"], match_score), 2)
 
-    # Resolve origins for top candidates
+    # Resolve origins and real audio previews for top candidates
     candidate_list = list(candidates.values())[:10]
     for cand in candidate_list:
-        cand_origin = await musicbrainz_service.get_artist_origin(cand["name"])
+        cand_origin, cand_audio = await asyncio.gather(
+            musicbrainz_service.get_artist_origin(cand["name"]),
+            audio_service.get_real_audio_preview(cand["name"], "Hit")
+        )
         c_country = cand_origin.get("country", "Desconocido")
         c_city = cand_origin.get("city", "Escena Local")
         c_flag = get_flag(c_country, cand_origin.get("country_code", ""))
@@ -131,7 +136,7 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
             "isLocal": c_country == user_country or c_country in ["Chile", "CL"],
             "tidal_url": tidal_service.get_tidal_url(cand["name"]),
             "topTracks": [
-              {"title": f"Hits - {cand['name']}", "album": "Single", "duration": "0:30", "previewUrl": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"}
+              {"title": f"Hits - {cand['name']}", "album": "Single", "duration": "0:30", "previewUrl": cand_audio}
             ]
         })
 
