@@ -12,6 +12,8 @@ export default function HeaderControl({
   setOnlyLocal,
   onShareMap
 }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [liveResults, setLiveResults] = useState([]);
 
   // Fetch live artist search suggestions from iTunes API when typing
