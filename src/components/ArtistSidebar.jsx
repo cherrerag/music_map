@@ -14,13 +14,43 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
   // Get rich metadata for the selected node
   const artist = selectedNode ? getArtistDetails(selectedNode) : null;
 
+  const [dynamicAudioUrl, setDynamicAudioUrl] = useState(null);
+
   // Selected track
-  const currentTrack = artist?.topTracks?.[currentTrackIndex] || {
-    title: `Popular Hit - ${artist?.name || ''}`,
+  const rawTrack = artist?.topTracks?.[currentTrackIndex] || {
+    title: `Hits - ${artist?.name || ''}`,
     album: "Single 2024",
-    duration: "0:30",
-    previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+    duration: "0:30"
   };
+
+  const currentTrack = {
+    ...rawTrack,
+    previewUrl: dynamicAudioUrl || rawTrack.previewUrl
+  };
+
+  // Dynamically resolve real iTunes preview audio if missing or placeholder
+  useEffect(() => {
+    let isCancelled = false;
+    const url = rawTrack?.previewUrl;
+
+    if (!url || url.includes("soundhelix") || url.includes("google")) {
+      const query = `${artist?.name || ''} ${rawTrack?.title || ''}`;
+      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`)
+        .then(res => res.json())
+        .then(data => {
+          if (!isCancelled && data.results && data.results[0] && data.results[0].previewUrl) {
+            setDynamicAudioUrl(data.results[0].previewUrl);
+          }
+        })
+        .catch(err => console.error("Dynamic iTunes preview error:", err));
+    } else {
+      setDynamicAudioUrl(null);
+    }
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [artist?.id, artist?.name, currentTrackIndex, rawTrack?.previewUrl]);
 
   // Reset audio & state on artist node change
   useEffect(() => {
@@ -32,6 +62,7 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
     setCurrentTrackIndex(0);
     setIsSaved(false);
     setAudioProgress(0);
+    setDynamicAudioUrl(null);
   }, [selectedNode?.id]);
 
   // Clean up audio on unmount
@@ -47,7 +78,8 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
   // Update audio instance when track changes or user toggles play/mute
   const togglePlay = (indexToPlay = currentTrackIndex) => {
     const targetTrack = artist?.topTracks?.[indexToPlay] || currentTrack;
-    if (!targetTrack?.previewUrl) return;
+    const audioUrl = dynamicAudioUrl || targetTrack?.previewUrl;
+    if (!audioUrl) return;
 
     if (indexToPlay !== currentTrackIndex) {
       setCurrentTrackIndex(indexToPlay);
@@ -57,8 +89,11 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
       }
     }
 
-    if (!audioRef.current) {
-      const newAudio = new Audio(targetTrack.previewUrl);
+    if (!audioRef.current || audioRef.current.src !== audioUrl) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const newAudio = new Audio(audioUrl);
       newAudio.muted = isMuted;
 
       newAudio.ontimeupdate = () => {

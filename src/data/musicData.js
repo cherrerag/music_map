@@ -1,4 +1,120 @@
 // Mock Database for MusicMap MVP
+export const REAL_ARTISTS_DB = {
+  "gustavo-cerati": {
+    id: "gustavo-cerati",
+    name: "Gustavo Cerati",
+    country: "Argentina",
+    city: "Buenos Aires",
+    flag: "🇦🇷",
+    genres: ["Art Rock", "Synth-Pop", "Alternative Rock"],
+    popularity: 94,
+    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    bio: "Líder de Soda Stereo y uno de los músicos más influyentes e innovadores del rock iberoamericano. Su carrera solista abarca obras maestras como Bocanada y Fuerza Natural.",
+    topTracks: [
+      { title: "Bocanada", album: "Bocanada", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/c8/4b/01/c84b0190-722d-1172-0bde-5e210d79213c/mzaf_16978331523383893664.plus.aac.p.m4a" },
+      { title: "Crimen", album: "Ahí Vamos", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/ac/b1/68/acb1681a-3a20-ea0e-b199-dc1f2e680a45/mzaf_3751899153482475975.plus.aac.p.m4a" }
+    ]
+  },
+  "los-tres": {
+    id: "los-tres",
+    name: "Los Tres",
+    country: "Chile",
+    city: "Concepción",
+    flag: "🇨🇱",
+    genres: ["Cueca Rock", "Alternative Rock", "Jazz Rock"],
+    popularity: 87,
+    image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80",
+    bio: "Banda chilena de rock formada en Concepción en 1987. Célebres por fusionar rock alternativo, jazz, balada y cueca chora tradicional.",
+    topTracks: [
+      { title: "Déjate Caer", album: "La Espada & la Pared", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/d6/ad/a1/d6ada181-352c-fc1a-e025-5bb82c4c3f4b/mzaf_17294797271105621929.plus.aac.p.m4a" }
+    ]
+  },
+  "virus": {
+    id: "virus",
+    name: "Virus",
+    country: "Argentina",
+    city: "La Plata",
+    flag: "🇦🇷",
+    genres: ["New Wave", "Synth-Pop"],
+    popularity: 83,
+    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    bio: "Banda argentina de new wave liderada por Federico Moura. Pioneros del synth-pop y la estética moderna en el rock de los 80.",
+    topTracks: [
+      { title: "Prontuario de Buenos Aires", album: "Locura", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview123/v4/6d/97/b4/6d97b4ba-9610-7b86-7755-7aa42e61372b/mzaf_15435104103306553645.plus.aac.p.m4a" }
+    ]
+  },
+  "zoe": {
+    id: "zoe",
+    name: "Zoé",
+    country: "México",
+    city: "Cuernavaca",
+    flag: "🇲🇽",
+    genres: ["Indie Rock", "Psychedelic Rock"],
+    popularity: 89,
+    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
+    bio: "Banda mexicana de rock alternativo conocida por su estilo psicodélico y letras poéticas lideradas por León Larregui.",
+    topTracks: [
+      { title: "Soñé", album: "MTV Unplugged", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/42/6a/be/426abe8e-85d6-7af1-5b86-fa76abd8882c/mzaf_5875689915942142665.plus.aac.p.m4a" }
+    ]
+  },
+  "charly-garcia": {
+    id: "charly-garcia",
+    name: "Charly García",
+    country: "Argentina",
+    city: "Buenos Aires",
+    flag: "🇦🇷",
+    genres: ["Prog Rock", "Pop Rock"],
+    popularity: 91,
+    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    bio: "Figura genial y fundamental del rock en español. Fundador de Sui Generis, Serú Girán y prolífico solista vanguardista.",
+    topTracks: [
+      { title: "No Voy en Tren", album: "Parte de la Religión", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview125/v4/25/86/33/25863368-fb96-bb22-76b2-f01c3cb832a9/mzaf_12948927473462805012.plus.aac.p.m4a" }
+    ]
+  },
+  "babasonicos": {
+    id: "babasonicos",
+    name: "Babasónicos",
+    country: "Argentina",
+    city: "Lanús",
+    flag: "🇦🇷",
+    genres: ["Alternative Rock", "Glam Rock"],
+    popularity: 85,
+    image: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    bio: "Banda argentina de rock alternativo caracterizada por su constante metamorfosis sonora y estética hedonista.",
+    topTracks: [
+      { title: "Putita", album: "Infame", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/fe/52/1a/fe521a9f-c2d2-09a1-8adc-4c56883b0b4f/mzaf_17176545453189820422.plus.aac.p.m4a" }
+    ]
+  },
+  "cafe-tacvba": {
+    id: "cafe-tacvba",
+    name: "Café Tacvba",
+    country: "México",
+    city: "Ciudad de México",
+    flag: "🇲🇽",
+    genres: ["Alternative Rock", "Folk Rock"],
+    popularity: 88,
+    image: "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
+    bio: "Banda ícono del rock mexicano que combina elementos autóctonos tradicionales con punk, electrónica y pop vanguardista.",
+    topTracks: [
+      { title: "Eres", album: "Cuatro Caminos", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview115/v4/65/c2/b0/65c2b09c-503b-f4f3-07dd-e4c6434d6611/mzaf_6737834753047942667.plus.aac.p.m4a" }
+    ]
+  },
+  "lucybell": {
+    id: "lucybell",
+    name: "Lucybell",
+    country: "Chile",
+    city: "Santiago",
+    flag: "🇨🇱",
+    genres: ["Alternative Rock", "Darkwave"],
+    popularity: 82,
+    image: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80",
+    bio: "Banda chilena de rock alternativo formada en 1991, referente del sonido atmosférico y gótico en el país.",
+    topTracks: [
+      { title: "Hoy Soñé", album: "Lumina", duration: "0:30", previewUrl: "https://audio-ssl.itunes.apple.com/itunes-assets/AudioPreview221/v4/dc/c1/02/dcc10291-3613-9207-1735-93c66b50d485/mzaf_4510411727739599785.plus.aac.p.m4a" }
+    ]
+  }
+};
+
 export const SEED_ARTISTS = [
   {
     id: "soda-stereo",
@@ -83,6 +199,9 @@ export function getArtistDetails(node) {
   const seedMatch = SEED_ARTISTS.find(a => a.id === node.id);
   if (seedMatch) return seedMatch;
 
+  const dbMatch = REAL_ARTISTS_DB[node.id];
+  if (dbMatch) return dbMatch;
+
   // Generate clean procedural data for dynamically expanded nodes
   return {
     id: node.id,
@@ -95,8 +214,7 @@ export function getArtistDetails(node) {
     image: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000)}?auto=format&fit=crop&w=600&q=80`,
     bio: `${node.name} es un proyecto representativo del género ${node.genres?.[0] || 'Alternative'} en ${node.country || 'la escena musical'}. Destaca por sus atmósferas envolventes y sonido distintivo.`,
     topTracks: [
-      { title: `Track Esencial - ${node.name}`, album: "Single 2024", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-10.mp3" },
-      { title: `Canción Representativa`, album: "Session EP", duration: "0:30", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-11.mp3" }
+      { title: `Hits - ${node.name}`, album: "Single", duration: "0:30", previewUrl: "" }
     ],
     similar: []
   };
