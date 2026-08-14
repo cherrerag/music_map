@@ -14,43 +14,50 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
   // Get rich metadata for the selected node
   const artist = selectedNode ? getArtistDetails(selectedNode) : null;
 
-  const [dynamicAudioUrl, setDynamicAudioUrl] = useState(null);
+  const [dynamicTracks, setDynamicTracks] = useState(null);
 
-  // Selected track
-  const rawTrack = artist?.topTracks?.[currentTrackIndex] || {
-    title: `Hits - ${artist?.name || ''}`,
-    album: "Single 2024",
-    duration: "0:30"
+  // Clean artist name (strip out any procedural/synthetic suffix)
+  const cleanArtistName = (artist?.name || '')
+    .replace(/ (Session|Constelación Local|Onda Sintética|Colectivo Fusión|expanded-\d+|Fans|sim-\d+)/gi, '')
+    .trim();
+
+  // Active track list (prioritizing dynamic iTunes 3-track real search)
+  const activeTracks = (dynamicTracks && dynamicTracks.length > 0) 
+    ? dynamicTracks 
+    : (artist?.topTracks && artist.topTracks[0]?.previewUrl ? artist.topTracks : null);
+
+  const currentTrack = activeTracks?.[currentTrackIndex] || {
+    title: `${cleanArtistName || 'Canción Principal'}`,
+    album: "Hit Single",
+    duration: "0:30",
+    previewUrl: ""
   };
 
-  const currentTrack = {
-    ...rawTrack,
-    previewUrl: dynamicAudioUrl || rawTrack.previewUrl
-  };
-
-  // Dynamically resolve real iTunes preview audio if missing or placeholder
+  // Fetch Top 3 real tracks from iTunes API for the artist
   useEffect(() => {
     let isCancelled = false;
-    const url = rawTrack?.previewUrl;
+    if (!cleanArtistName) return;
 
-    if (!url || url.includes("soundhelix") || url.includes("google")) {
-      const query = `${artist?.name || ''} ${rawTrack?.title || ''}`;
-      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`)
-        .then(res => res.json())
-        .then(data => {
-          if (!isCancelled && data.results && data.results[0] && data.results[0].previewUrl) {
-            setDynamicAudioUrl(data.results[0].previewUrl);
-          }
-        })
-        .catch(err => console.error("Dynamic iTunes preview error:", err));
-    } else {
-      setDynamicAudioUrl(null);
-    }
+    // Fetch top 3 tracks with real song titles and audio previews
+    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanArtistName)}&entity=song&limit=3`)
+      .then(res => res.json())
+      .then(data => {
+        if (!isCancelled && data.results && data.results.length > 0) {
+          const tracks = data.results.map(item => ({
+            title: item.trackName || cleanArtistName,
+            album: item.collectionName || "Single",
+            duration: "0:30",
+            previewUrl: item.previewUrl
+          }));
+          setDynamicTracks(tracks);
+        }
+      })
+      .catch(err => console.error("iTunes dynamic 3-track fetch error:", err));
 
     return () => {
       isCancelled = true;
     };
-  }, [artist?.id, artist?.name, currentTrackIndex, rawTrack?.previewUrl]);
+  }, [artist?.id, cleanArtistName]);
 
   // Reset audio & state on artist node change
   useEffect(() => {
@@ -62,7 +69,7 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
     setCurrentTrackIndex(0);
     setIsSaved(false);
     setAudioProgress(0);
-    setDynamicAudioUrl(null);
+    setDynamicTracks(null);
   }, [selectedNode?.id]);
 
   // Clean up audio on unmount
@@ -77,8 +84,8 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
 
   // Update audio instance when track changes or user toggles play/mute
   const togglePlay = (indexToPlay = currentTrackIndex) => {
-    const targetTrack = artist?.topTracks?.[indexToPlay] || currentTrack;
-    const audioUrl = dynamicAudioUrl || targetTrack?.previewUrl;
+    const targetTrack = activeTracks?.[indexToPlay] || currentTrack;
+    const audioUrl = targetTrack?.previewUrl;
     if (!audioUrl) return;
 
     if (indexToPlay !== currentTrackIndex) {
@@ -323,13 +330,13 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
           )}
 
           {/* Top Tracks List */}
-          {artist.topTracks && artist.topTracks.length > 0 && (
+          {activeTracks && activeTracks.length > 0 && (
             <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '10px' }}>
               <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '6px' }}>
                 Top Canciones
               </span>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                {artist.topTracks.map((track, idx) => {
+                {activeTracks.map((track, idx) => {
                   const isSelected = idx === currentTrackIndex;
                   return (
                     <button
@@ -338,7 +345,7 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justify: 'space-between',
+                        justifyContent: 'space-between',
                         padding: '6px 8px',
                         borderRadius: '6px',
                         background: isSelected ? 'rgba(139, 92, 246, 0.2)' : 'transparent',

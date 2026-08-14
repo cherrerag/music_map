@@ -12,8 +12,34 @@ export default function HeaderControl({
   setOnlyLocal,
   onShareMap
 }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [liveResults, setLiveResults] = useState([]);
+
+  // Fetch live artist search suggestions from iTunes API when typing
+  React.useEffect(() => {
+    if (!searchTerm || searchTerm.trim().length < 2) {
+      setLiveResults([]);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(searchTerm.trim())}&entity=musicArtist&limit=5`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.results) {
+            const results = data.results.map(item => ({
+              id: item.artistName.toLowerCase().replace(/\s+/g, '-'),
+              name: item.artistName,
+              genre: item.primaryGenreName || "Music",
+              flag: "🎵"
+            }));
+            setLiveResults(results);
+          }
+        })
+        .catch(err => console.error("Search error:", err));
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   const filteredSeeds = SEED_ARTISTS.filter(a => 
     a.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -23,6 +49,12 @@ export default function HeaderControl({
     onSelectSeed(artist);
     setSearchTerm('');
     setIsSearchOpen(false);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && searchTerm.trim()) {
+      handleSelect({ name: searchTerm.trim() });
+    }
   };
 
   return (
@@ -83,12 +115,13 @@ export default function HeaderControl({
           <Search size={16} style={{ color: 'var(--text-muted)' }} />
           <input
             type="text"
-            placeholder="Buscar artista semilla..."
+            placeholder="Buscar artista semilla (ej: Depeche Mode)..."
             value={searchTerm}
             onChange={(e) => {
               setSearchTerm(e.target.value);
               setIsSearchOpen(true);
             }}
+            onKeyDown={handleKeyDown}
             onFocus={() => setIsSearchOpen(true)}
             style={{
               background: 'transparent',
@@ -110,7 +143,7 @@ export default function HeaderControl({
             left: 0,
             right: 0,
             padding: '8px',
-            maxHeight: '280px',
+            maxHeight: '320px',
             overflowY: 'auto',
             boxShadow: '0 12px 36px rgba(0,0,0,0.6)'
           }}>
@@ -132,13 +165,45 @@ export default function HeaderControl({
                 <Search size={16} color="#c4b5fd" />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Buscar "{searchTerm}"</div>
-                  <div style={{ fontSize: '0.75rem', color: '#c4b5fd' }}>Generar grafo desde la API en vivo</div>
+                  <div style={{ fontSize: '0.75rem', color: '#c4b5fd' }}>Generar grafo completo en tiempo real</div>
                 </div>
               </div>
             )}
 
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', padding: '4px 8px', textTransform: 'uppercase' }}>
-              Artistas Semilla Recomendados
+            {/* Live Search API Results */}
+            {liveResults.length > 0 && (
+              <div>
+                <p style={{ fontSize: '0.7rem', color: '#c4b5fd', padding: '4px 8px', textTransform: 'uppercase', fontWeight: 700 }}>
+                  Sugerencias en Vivo
+                </p>
+                {liveResults.map(artist => (
+                  <div
+                    key={artist.id}
+                    onClick={() => handleSelect(artist)}
+                    className="glass-card"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '8px',
+                      marginBottom: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'rgba(139, 92, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>
+                      🎵
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>{artist.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>{artist.genre}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', padding: '4px 8px', textTransform: 'uppercase', marginTop: '6px' }}>
+              Artistas Semilla Destacados
             </p>
             {filteredSeeds.map(artist => (
               <div
