@@ -28,3 +28,18 @@
 - **Contexto:** 6 afines resultaban reducidos para armar playlists ricas en una sola consulta.
 - **Decisión:** Crear un selector de densidad de afines en el navbar y elevar la densidad por defecto a **10 nodos**.
 - **Resultado:** Equilibrio perfecto entre estética del grafo (evitando el *hairball effect*) y abundancia de canciones (200 tracks disponibles por búsqueda).
+
+---
+
+## 5. Control de Acceso Privado Familiar (`AuthGatekeeperModal`)
+- **Contexto:** Necesidad de restringir el acceso a la aplicación únicamente a 5 miembros autorizados de la familia sin exponer información sensible.
+- **Decisión:** Implementar un modal de acceso condicional basado en firmas de autenticación con botón único *"Continuar con Google"* que valida la cuenta del usuario contra una lista blanca encriptada en el estado client-side y persiste en `localStorage`.
+- **Resultado:** Aplicación blindada frente a usuarios externos con interfaz limpia.
+
+---
+
+## 6. Unificación de Controles Visuales en `HeaderControl.jsx`
+- **Contexto:** La barra superior mostraba demasiados elementos horizontales que apretaban el diseño en resoluciones estándar.
+- **Decisión:** Fusionar el selector de país y el conmutador de escena local/global en un único dropdown unificado de Escena (`🌐 Escena Global`, `🇨🇱 Solo Chile`, `🇦🇷 Solo Argentina`, etc.) y retirar el botón redundante de compartir.
+- **Resultado:** Interfaz amplia, limpia y desahogada en todos los navegadores.
+
