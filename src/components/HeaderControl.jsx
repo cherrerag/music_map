@@ -110,10 +110,33 @@ export default function HeaderControl({
             left: 0,
             right: 0,
             padding: '8px',
-            maxHeight: '260px',
+            maxHeight: '280px',
             overflowY: 'auto',
             boxShadow: '0 12px 36px rgba(0,0,0,0.6)'
           }}>
+            {searchTerm.trim().length > 0 && (
+              <div
+                onClick={() => handleSelect({ name: searchTerm.trim() })}
+                className="glass-card"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '10px 12px',
+                  marginBottom: '8px',
+                  cursor: 'pointer',
+                  background: 'rgba(139, 92, 246, 0.25)',
+                  border: '1px solid rgba(139, 92, 246, 0.4)'
+                }}
+              >
+                <Search size={16} color="#c4b5fd" />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#fff' }}>Buscar "{searchTerm}"</div>
+                  <div style={{ fontSize: '0.75rem', color: '#c4b5fd' }}>Generar grafo desde la API en vivo</div>
+                </div>
+              </div>
+            )}
+
             <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', padding: '4px 8px', textTransform: 'uppercase' }}>
               Artistas Semilla Recomendados
             </p>

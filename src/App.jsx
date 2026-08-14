@@ -16,41 +16,64 @@ export default function App() {
   // Graph state (nodes and links)
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
 
-  // Generate initial graph from seed artist
+  // Generate initial graph from seed artist (with FastAPI backend fetch + local fallback)
   useEffect(() => {
     if (!currentSeed) return;
 
-    const seedNode = {
-      id: currentSeed.id,
-      name: currentSeed.name,
-      country: currentSeed.country,
-      flag: currentSeed.flag,
-      isSeed: true,
-      genres: currentSeed.genres
-    };
+    const seedName = typeof currentSeed === 'string' ? currentSeed : currentSeed.name;
 
-    const similarNodes = currentSeed.similar.map(sim => ({
-      id: sim.id,
-      name: sim.name,
-      country: sim.country,
-      flag: sim.flag,
-      isSeed: false,
-      genres: sim.genres
-    }));
+    async function loadNetwork() {
+      try {
+        const response = await fetch(`http://localhost:8000/api/network?artist=${encodeURIComponent(seedName)}&user_country=${encodeURIComponent(userCountry)}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.nodes && data.nodes.length > 0) {
+            setGraphData(data);
+            setSelectedNode(data.nodes[0]);
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Backend API offline or unreachable, using local fallback data:", err);
+      }
 
-    const links = currentSeed.similar.map(sim => ({
-      source: currentSeed.id,
-      target: sim.id,
-      weight: sim.similarity
-    }));
+      // Local fallback
+      const seedObj = typeof currentSeed === 'object' ? currentSeed : (SEED_ARTISTS.find(a => a.name.toLowerCase() === seedName.toLowerCase()) || SEED_ARTISTS[0]);
 
-    setGraphData({
-      nodes: [seedNode, ...similarNodes],
-      links: links
-    });
+      const seedNode = {
+        id: seedObj.id,
+        name: seedObj.name,
+        country: seedObj.country,
+        flag: seedObj.flag,
+        isSeed: true,
+        genres: seedObj.genres
+      };
 
-    setSelectedNode(seedNode);
-  }, [currentSeed]);
+      const similarNodes = (seedObj.similar || []).map(sim => ({
+        id: sim.id,
+        name: sim.name,
+        country: sim.country,
+        flag: sim.flag,
+        isSeed: false,
+        genres: sim.genres
+      }));
+
+      const links = (seedObj.similar || []).map(sim => ({
+        source: seedObj.id,
+        target: sim.id,
+        weight: sim.similarity
+      }));
+
+      setGraphData({
+        nodes: [seedNode, ...similarNodes],
+        links: links
+      });
+
+      setSelectedNode(seedNode);
+    }
+
+    loadNetwork();
+  }, [currentSeed, userCountry]);
 
   // Handler for expanding red from any node
   const handleExpandNode = (nodeToExpand) => {
