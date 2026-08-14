@@ -320,21 +320,22 @@ export default function HeaderControl({
           </span>
         </div>
 
-        {/* User Account Badge & Logout */}
+        {/* User Logout Button */}
         {authenticatedUser && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255, 255, 255, 0.06)', padding: '6px 10px', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
-            <User size={14} color="#00d2ff" />
-            <span style={{ fontSize: '0.78rem', color: '#e0f2fe', fontWeight: 600 }}>
-              {authenticatedUser.split('@')[0]}
-            </span>
-            <button
-              onClick={onLogout}
-              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', marginLeft: '2px' }}
-              title="Cerrar Sesión"
-            >
-              <LogOut size={14} />
-            </button>
-          </div>
+          <button
+            onClick={onLogout}
+            className="btn-secondary"
+            style={{
+              padding: '8px 12px',
+              color: '#ef4444',
+              borderColor: 'rgba(239, 68, 68, 0.3)',
+              fontSize: '0.8rem',
+              fontWeight: 600
+            }}
+            title="Cerrar Sesión"
+          >
+            <LogOut size={15} /> Cerrar Sesión
+          </button>
         )}
 
         {/* Playlist Cart Button */}
