@@ -49,6 +49,8 @@ export default function PlaylistCartModal({
     onReorderTracks(newCart);
   };
 
+  const [showTidalGuide, setShowTidalGuide] = useState(false);
+
   const handleExportM3U = () => {
     let content = "#EXTM3U\n";
     content += `#PLAYLIST:${playlistTitle}\n\n`;
@@ -99,21 +101,15 @@ export default function PlaylistCartModal({
   const handleOpenInTidal = () => {
     if (playlistCart.length === 0) return;
 
-    // 1. Copy list formatted for TIDAL bulk search
+    // 1. Download CSV automatically for TIDAL
+    handleExportCSV();
+
+    // 2. Copy formatted text to clipboard
     const text = playlistCart.map(t => `${t.artistName} - ${t.title}`).join('\n');
     navigator.clipboard.writeText(text);
-    setCopiedToast(true);
-    setTimeout(() => setCopiedToast(false), 3000);
 
-    // 2. Open Soundiiz TIDAL importer / TIDAL search directly
-    const firstTrack = playlistCart[0];
-    const tidalSearchUrl = `https://listen.tidal.com/search/tracks?q=${encodeURIComponent(firstTrack.artistName + ' ' + firstTrack.title)}`;
-    window.open(tidalSearchUrl, '_blank');
-
-    // 3. Optionally open Soundiiz direct TIDAL webkit in background
-    setTimeout(() => {
-      window.open('https://soundiiz.com/webkit/tidal', '_blank');
-    }, 400);
+    // 3. Display interactive guide card inside modal
+    setShowTidalGuide(true);
   };
 
   return (
@@ -195,6 +191,99 @@ export default function PlaylistCartModal({
             <X size={18} />
           </button>
         </div>
+
+        {/* Guided Export Banner to TIDAL */}
+        {showTidalGuide && (
+          <div style={{
+            margin: '16px 24px 0 24px',
+            padding: '14px 16px',
+            borderRadius: '12px',
+            background: 'linear-gradient(135deg, rgba(0, 210, 255, 0.15) 0%, rgba(0, 114, 255, 0.2) 100%)',
+            border: '1px solid rgba(0, 210, 255, 0.4)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles size={18} color="#00d2ff" />
+                <span style={{ fontSize: '0.9rem', fontWeight: 800, color: '#fff' }}>
+                  ¡Archivo CSV descargado y lista copiada! 🌊
+                </span>
+              </div>
+              <button 
+                onClick={() => setShowTidalGuide(false)}
+                style={{ background: 'none', border: 'none', color: '#7dd3fc', cursor: 'pointer', fontSize: '0.8rem' }}
+              >
+                Cerrar ✕
+              </button>
+            </div>
+            
+            <p style={{ fontSize: '0.8rem', color: '#e0f2fe', lineHeight: 1.4, margin: 0 }}>
+              Para transferir estas canciones a tu cuenta de <b>TIDAL</b> en 1 clic (como tus otras playlists), abre el importador gratuito de <b>TuneMyMusic</b> o <b>Soundiiz</b> y sube el archivo CSV descargado:
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '4px' }}>
+              <a
+                href="https://www.tunemymusic.com/es/transfer"
+                target="_blank"
+                rel="noreferrer"
+                className="btn-primary"
+                style={{
+                  fontSize: '0.8rem',
+                  padding: '7px 12px',
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  borderColor: '#10b981',
+                  color: '#fff',
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                1. Importar a TIDAL vía TuneMyMusic 🚀 <ExternalLink size={14} />
+              </a>
+
+              <a
+                href="https://soundiiz.com/webapp"
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary"
+                style={{
+                  fontSize: '0.8rem',
+                  padding: '7px 12px',
+                  borderColor: '#00d2ff',
+                  color: '#38bdf8',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                2. Importar en Soundiiz 🌊 <ExternalLink size={14} />
+              </a>
+
+              <a
+                href="https://listen.tidal.com/"
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary"
+                style={{
+                  fontSize: '0.8rem',
+                  padding: '7px 12px',
+                  color: '#fff',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                3. Abrir Reproductor TIDAL Web 🎧 <ExternalLink size={14} />
+              </a>
+            </div>
+          </div>
+        )}
 
         {/* Track List Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
