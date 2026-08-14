@@ -1,0 +1,83 @@
+# MusicMap - Product Definition & Requirements (PDR)
+
+## 1. Visión General del Proyecto
+**MusicMap** es una aplicación web interactiva diseñada para amantes de la música que buscan descubrir nuevos artistas a través de un **grafo de red visual (constelación de nodos)**. La plataforma conecta un artista "semilla" con artistas similares, permitiendo explorar relaciones basadas en **similitud musical, origen geográfico (escena local vs. global) y géneros/subgéneros**.
+
+---
+
+## 2. Objetivos del MVP
+- **Descubrimiento visual e intuitivo:** Navegación fluida por nodos que representan artistas y enlaces que representan su nivel de afinidad.
+- **Filtro por Contexto Geográfico:** Permitir al usuario descubrir artistas de su propia región/ciudad o explorar escenas musicales de otros países.
+- **Previsualización de Audio:** Escuchar clips de 30 segundos de las canciones más populares de los artistas descubiertos.
+- **Perspectiva de despliegue:** Desarrollar una maqueta/prototipo funcional localmente para validación antes de su despliegue en producción en la web.
+
+---
+
+## 3. Alcance Funcional (MVP)
+
+### 3.1. Flujo de Usuario Principal
+1. **Búsqueda e Inicio:**
+   - El usuario ingresa el nombre de un artista "semilla" (ej: *Soda Stereo*, *Tame Impala*, *Rosalía*).
+   - Opcionalmente define una ubicación de referencia (detectada por IP o seleccionada en un buscador de ciudades) y un radio/filtro geográfico.
+2. **Generación del Grafo de Red (Opción A: Constelación de Nodos):**
+   - El sistema dibuja el nodo central (artista semilla) y despliega nodos vecinos conectados por líneas de afinidad.
+   - El color del halo indica la escena (Local vs Global o por Género).
+   - El grosor y la distancia de la línea indican la fuerza de similitud (0.0 a 1.0).
+3. **Exploración e Interacción con Nodos:**
+   - **Hover / Focus:** Muestra un cuadro flotante con el nombre, país de origen y género principal.
+   - **Click en Nodo:** Abre un panel lateral (Sidebar) con la ficha completa del artista (foto, biografía, origen geográfico, reproductor de audio preview de 30s y enlaces a Spotify/Last.fm).
+   - **Boton "Expandir Red":** Permite hacer crecer la red desde el nodo seleccionado para seguir descubriendo más artistas.
+4. **Controles y Filtros del Grafo:**
+   - Slider de **Nivel de Similitud** (filtrar conexiones débiles).
+   - Toggle de **Solo Artistas Locales** (filtrar bandas/artistas del país o región seleccionada).
+   - Filtro por **Subgéneros / Tags**.
+
+---
+
+## 4. Diseño e Interfaz de Usuario (UI/UX) - Opción A: Constelación de Nodos
+
+### 4.1. Estética Visual
+- **Tema:** Dark Mode espacial / neón (*Space Dark*, `#0B0E14`, `#121824`).
+- **Paleta de Colores:**
+  - Nodos Semilla / Destacados: Neón Violeta/Púrpura (`#8B5CF6`).
+  - Nodos Locales (Mismo país/escena): Neón Esmeralda/Cyan (`#10B981` / `#06B6D4`).
+  - Nodos Globales: Neón Rosa/Magenta (`#EC4899`).
+  - Enlaces / Conexiones: Gradientes sutiles semi-transparentes (`rgba(139, 92, 246, 0.3)`).
+- **Efectos:** Glassmorphism (`backdrop-filter: blur()`), halos de luz (*glow*), animaciones de atracción/repulsión físicas en 2D/3D (Force-Directed Graph).
+
+---
+
+## 5. Arquitectura de Datos y APIs
+
+### 5.1. Fuentes de Datos Oficiales para MVP
+| Servicio | Rol / Datos Proporcionados | API Endpoint Base |
+| :--- | :--- | :--- |
+| **Spotify Web API** | Metadatos de artistas, imágenes HD, popularidad, ID oficial de Spotify, previews de audio (30s) y top tracks. | `https://api.spotify.com/v1/` |
+| **Last.fm API** | Red de similitud de artistas (`artist.getSimilar`) y etiquetado fino por géneros/tags (`artist.getTopTags`). | `https://ws.audioscrobbler.com/2.0/` |
+| **MusicBrainz API** | Datos enciclopédicos sobre ciudad/país de origen exacto de bandas y artistas solos. | `https://musicbrainz.org/ws/2/` |
+
+### 5.2. Modelo de Nodos y Relaciones (Grafo)
+- **Nodo Artist:**
+  - `id`: string (Spotify ID o Slug)
+  - `name`: string
+  - `country`: string (código ISO o nombre de país)
+  - `city`: string (opcional)
+  - `genres`: Array<string>
+  - `popularity`: integer (0 - 100)
+  - `image_url`: string
+  - `preview_url`: string (audio 30s)
+  - `is_local`: boolean
+- **Relación SIMILAR_TO:**
+  - `source`: Artist.id
+  - `target`: Artist.id
+  - `weight`: float (0.0 - 1.0)
+  - `common_tags`: Array<string>
+
+---
+
+## 6. Hoja de Ruta de Desarrollo
+
+1. **Fase 1 (Completado):** Definición y depuración del PDR.
+2. **Fase 2 (En Progreso):** Prototipo frontend web interactivo (Maqueta local con interfaz visual completa, motor de físicas de nodos en 2D Canvas/SVG, simulación de datos ricos y búsqueda).
+3. **Fase 3:** Integración con backend FastAPI y llaves de APIs (Spotify / Last.fm / MusicBrainz).
+4. **Fase 4:** Preparación para despliegue en servidor / nube pública.
