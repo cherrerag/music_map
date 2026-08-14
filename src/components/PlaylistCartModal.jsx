@@ -4,7 +4,7 @@ import { X, Play, Pause, Trash2, Download, ExternalLink, MoveUp, MoveDown, Disc,
 export default function PlaylistCartModal({ 
   isOpen, 
   onClose, 
-  playlistCart, 
+  playlistCart = [], 
   onRemoveTrack, 
   onClearPlaylist,
   onReorderTracks
@@ -15,6 +15,8 @@ export default function PlaylistCartModal({
   const audioRef = useRef(null);
 
   if (!isOpen) return null;
+
+  const safeCart = Array.isArray(playlistCart) ? playlistCart : [];
 
   const togglePlayTrack = (idx, track) => {
     if (!track.previewUrl) return;
@@ -39,14 +41,14 @@ export default function PlaylistCartModal({
   };
 
   const handleMove = (index, direction) => {
-    const newCart = [...playlistCart];
+    const newCart = [...safeCart];
     const targetIndex = index + direction;
     if (targetIndex < 0 || targetIndex >= newCart.length) return;
 
     const temp = newCart[index];
     newCart[index] = newCart[targetIndex];
     newCart[targetIndex] = temp;
-    onReorderTracks(newCart);
+    if (onReorderTracks) onReorderTracks(newCart);
   };
 
   const [showTidalGuide, setShowTidalGuide] = useState(false);
@@ -55,7 +57,7 @@ export default function PlaylistCartModal({
     let content = "#EXTM3U\n";
     content += `#PLAYLIST:${playlistTitle}\n\n`;
 
-    playlistCart.forEach(t => {
+    safeCart.forEach(t => {
       content += `#EXTINF:-1,${t.artistName} - ${t.title}\n`;
       content += `${t.previewUrl || t.tidalUrl || ''}\n\n`;
     });
@@ -72,7 +74,7 @@ export default function PlaylistCartModal({
   };
 
   const handleCopyText = () => {
-    const text = playlistCart.map((t, i) => `${i + 1}. ${t.artistName} - ${t.title}`).join('\n');
+    const text = safeCart.map((t, i) => `${i + 1}. ${t.artistName} - ${t.title}`).join('\n');
     navigator.clipboard.writeText(`Playlist: ${playlistTitle}\n\n${text}`);
     setCopiedToast(true);
     setTimeout(() => setCopiedToast(false), 2500);
@@ -80,7 +82,7 @@ export default function PlaylistCartModal({
 
   const handleExportCSV = () => {
     let content = "Track Name,Artist Name,Album Name\n";
-    playlistCart.forEach(t => {
+    safeCart.forEach(t => {
       const cleanTrack = (t.title || '').replace(/"/g, '""');
       const cleanArtist = (t.artistName || '').replace(/"/g, '""');
       const cleanAlbum = (t.album || '').replace(/"/g, '""');
@@ -99,13 +101,13 @@ export default function PlaylistCartModal({
   };
 
   const handleOpenInTidal = () => {
-    if (playlistCart.length === 0) return;
+    if (safeCart.length === 0) return;
 
     // 1. Download CSV automatically for TIDAL
     handleExportCSV();
 
     // 2. Copy formatted text to clipboard
-    const text = playlistCart.map(t => `${t.artistName} - ${t.title}`).join('\n');
+    const text = safeCart.map(t => `${t.artistName} - ${t.title}`).join('\n');
     navigator.clipboard.writeText(text);
 
     // 3. Display interactive guide card inside modal
@@ -176,7 +178,7 @@ export default function PlaylistCartModal({
                 }}
               />
               <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                <span>🛒 {playlistCart.length} Canciones guardadas</span>
+                <span>🛒 {safeCart.length} Canciones guardadas</span>
                 <span>•</span>
                 <span style={{ color: '#00d2ff', fontWeight: 600 }}>Lista para TIDAL 🌊</span>
               </div>
@@ -287,18 +289,18 @@ export default function PlaylistCartModal({
 
         {/* Track List Body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {playlistCart.length === 0 ? (
+          {safeCart.length === 0 ? (
             <div style={{ padding: '48px 0', textAlign: 'center', color: 'var(--text-muted)' }}>
               <Disc size={48} style={{ opacity: 0.3, marginBottom: '12px' }} />
               <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Tu carrito de playlist está vacío</p>
               <p style={{ fontSize: '0.8rem', marginTop: '4px' }}>Navega en el mapa y presiona <b>"+"</b> en tus canciones favoritas para armar tu lista.</p>
             </div>
           ) : (
-            playlistCart.map((track, idx) => {
+            safeCart.map((track, idx) => {
               const isPlaying = playingIndex === idx;
               return (
                 <div 
-                  key={`${track.id}-${idx}`} 
+                  key={`${track.id || 'track'}-${idx}`} 
                   className="glass-card"
                   style={{
                     display: 'flex',
@@ -326,10 +328,10 @@ export default function PlaylistCartModal({
 
                     <div style={{ minWidth: 0, flex: 1 }}>
                       <p style={{ fontSize: '0.88rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {track.title}
+                        {track.title || "Canción sin título"}
                       </p>
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {track.artistName} {track.album ? `• ${track.album}` : ''}
+                        {track.artistName || "Artista desconocido"} {track.album ? `• ${track.album}` : ''}
                       </p>
                     </div>
                   </div>
@@ -347,16 +349,16 @@ export default function PlaylistCartModal({
 
                     <button 
                       onClick={() => handleMove(idx, 1)} 
-                      disabled={idx === playlistCart.length - 1}
+                      disabled={idx === safeCart.length - 1}
                       className="btn-secondary"
-                      style={{ padding: '6px', opacity: idx === playlistCart.length - 1 ? 0.3 : 1, cursor: idx === playlistCart.length - 1 ? 'default' : 'pointer' }}
+                      style={{ padding: '6px', opacity: idx === safeCart.length - 1 ? 0.3 : 1, cursor: idx === safeCart.length - 1 ? 'default' : 'pointer' }}
                       title="Mover abajo"
                     >
                       <MoveDown size={14} />
                     </button>
 
                     <button 
-                      onClick={() => onRemoveTrack(idx)} 
+                      onClick={() => onRemoveTrack && onRemoveTrack(idx)} 
                       className="btn-secondary"
                       style={{ padding: '6px', color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', cursor: 'pointer' }}
                       title="Eliminar de la lista"
@@ -380,7 +382,7 @@ export default function PlaylistCartModal({
           gap: '12px',
           background: 'rgba(10, 15, 26, 0.95)'
         }}>
-          {playlistCart.length > 0 && (
+          {safeCart.length > 0 && (
             <button 
               onClick={onClearPlaylist}
               className="btn-secondary"
@@ -402,9 +404,9 @@ export default function PlaylistCartModal({
 
             <button 
               onClick={handleExportCSV}
-              disabled={playlistCart.length === 0}
+              disabled={safeCart.length === 0}
               className="btn-secondary"
-              style={{ fontSize: '0.8rem', gap: '6px', opacity: playlistCart.length === 0 ? 0.5 : 1, borderColor: '#00d2ff', color: '#7dd3fc' }}
+              style={{ fontSize: '0.8rem', gap: '6px', opacity: safeCart.length === 0 ? 0.5 : 1, borderColor: '#00d2ff', color: '#7dd3fc' }}
               title="Descargar archivo CSV formateado para importar en TIDAL / Soundiiz"
             >
               <Download size={14} /> Descargar CSV (TIDAL)
@@ -412,16 +414,16 @@ export default function PlaylistCartModal({
 
             <button 
               onClick={handleExportM3U}
-              disabled={playlistCart.length === 0}
+              disabled={safeCart.length === 0}
               className="btn-secondary"
-              style={{ fontSize: '0.8rem', gap: '6px', opacity: playlistCart.length === 0 ? 0.5 : 1 }}
+              style={{ fontSize: '0.8rem', gap: '6px', opacity: safeCart.length === 0 ? 0.5 : 1 }}
             >
               <Download size={14} /> Descargar M3U
             </button>
 
             <button 
               onClick={handleOpenInTidal}
-              disabled={playlistCart.length === 0}
+              disabled={safeCart.length === 0}
               className="btn-primary"
               style={{ 
                 background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)', 
@@ -430,7 +432,7 @@ export default function PlaylistCartModal({
                 fontWeight: 700,
                 fontSize: '0.85rem',
                 padding: '8px 16px',
-                opacity: playlistCart.length === 0 ? 0.5 : 1
+                opacity: safeCart.length === 0 ? 0.5 : 1
               }}
             >
               Abrir e Importar en TIDAL 🌊 <ExternalLink size={14} />
