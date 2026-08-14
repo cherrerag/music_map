@@ -79,31 +79,49 @@ export default function App() {
   }, [currentSeed, userCountry]);
 
   // Handler for expanding red from any node
-  const handleExpandNode = (nodeToExpand) => {
+  const handleExpandNode = async (nodeToExpand) => {
     showToast(`Expandiendo red para ${nodeToExpand.name}...`);
+    const API_BASE = import.meta.env.VITE_API_URL !== undefined 
+      ? import.meta.env.VITE_API_URL 
+      : (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
-    // Check if node already has pre-defined similar, or procedurally generate 4 new connected nodes
-    const details = getArtistDetails(nodeToExpand);
-    let newSimilars = details.similar;
-
-    if (!newSimilars || newSimilars.length === 0) {
-      // Procedural generation of new discovery nodes
-      const proceduralNames = [
-        { name: `${nodeToExpand.name} Session`, country: nodeToExpand.country, flag: nodeToExpand.flag },
-        { name: "Constelación Local", country: userCountry, flag: "🇨🇱" },
-        { name: "Onda Sintética", country: "Argentina", flag: "🇦🇷" },
-        { name: "Colectivo Fusión", country: "México", flag: "🇲🇽" }
-      ];
-
-      newSimilars = proceduralNames.map((p, idx) => ({
-        id: `${nodeToExpand.id}-expanded-${idx}`,
-        name: p.name,
-        country: p.country,
-        flag: p.flag,
-        similarity: 0.85 - idx * 0.05,
-        genres: nodeToExpand.genres || ["Alternative"]
-      }));
+    try {
+      const res = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(nodeToExpand.name)}&user_country=${encodeURIComponent(userCountry)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.nodes && data.nodes.length > 0) {
+          setGraphData(prev => {
+            const existingNodeIds = new Set(prev.nodes.map(n => n.id));
+            const addedNodes = data.nodes.filter(n => !existingNodeIds.has(n.id));
+            const addedLinks = data.links;
+            return {
+              nodes: [...prev.nodes, ...addedNodes],
+              links: [...prev.links, ...addedLinks]
+            };
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Backend API offline during expand, using fallback expansion:", err);
     }
+
+    // Real artists fallback map for node expansion
+    const realSimilarsMap = {
+      "the-cure": [
+        { id: "joy-division", name: "Joy Division", country: "Reino Unido", flag: "🇬🇧", similarity: 0.92, genres: ["Post-Punk"] },
+        { id: "new-order", name: "New Order", country: "Reino Unido", flag: "🇬🇧", similarity: 0.88, genres: ["Synth-Pop"] },
+        { id: "depeche-mode", name: "Depeche Mode", country: "Reino Unido", flag: "🇬🇧", similarity: 0.86, genres: ["Synth-Pop"] },
+        { id: "interpol", name: "Interpol", country: "Estados Unidos", flag: "🇺🇸", similarity: 0.82, genres: ["Indie Rock"] }
+      ]
+    };
+
+    const details = getArtistDetails(nodeToExpand);
+    const newSimilars = (details.similar && details.similar.length > 0) 
+      ? details.similar 
+      : (realSimilarsMap[nodeToExpand.id] || [
+          { id: `${nodeToExpand.id}-sim-1`, name: `${nodeToExpand.name}`, country: nodeToExpand.country, flag: nodeToExpand.flag, similarity: 0.85, genres: nodeToExpand.genres }
+        ]);
 
     setGraphData(prev => {
       const existingNodeIds = new Set(prev.nodes.map(n => n.id));
