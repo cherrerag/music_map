@@ -2,6 +2,7 @@ import asyncio
 from services.spotify_service import spotify_service
 from services.lastfm_service import lastfm_service
 from services.musicbrainz_service import musicbrainz_service
+from services.tidal_service import tidal_service
 
 # Flag mappings for countries
 FLAG_MAP = {
@@ -70,6 +71,7 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
         "image": seed.get("image") or "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
         "isSeed": True,
         "isLocal": seed_country == user_country or seed_country in ["Chile", "CL"],
+        "tidal_url": tidal_service.get_tidal_url(seed_name),
         "topTracks": top_tracks or [
           {"title": f"Single Principal - {seed_name}", "album": "Hits", "duration": "0:30", "previewUrl": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"}
         ]
@@ -127,6 +129,7 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
             "image": cand["image"] or "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
             "isSeed": False,
             "isLocal": c_country == user_country or c_country in ["Chile", "CL"],
+            "tidal_url": tidal_service.get_tidal_url(cand["name"]),
             "topTracks": [
               {"title": f"Hits - {cand['name']}", "album": "Single", "duration": "0:30", "previewUrl": "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"}
             ]
@@ -143,3 +146,4 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
         "nodes": nodes,
         "links": links
     }
+

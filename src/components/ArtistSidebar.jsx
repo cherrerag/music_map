@@ -347,15 +347,24 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
         </div>
 
         {/* External Links */}
-        <div style={{ marginTop: 'auto', paddingTop: '12px' }}>
+        <div style={{ marginTop: 'auto', paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <a 
+            href={artist.tidal_url || `https://listen.tidal.com/search?q=${encodeURIComponent(artist.name)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-primary"
+            style={{ width: '100%', justifyContent: 'center', background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)', borderColor: '#00d2ff', color: '#fff', fontWeight: 700 }}
+          >
+            Escuchar en TIDAL 🌊 <ExternalLink size={14} />
+          </a>
           <a 
             href={`https://open.spotify.com/search/${encodeURIComponent(artist.name)}`}
             target="_blank"
             rel="noreferrer"
             className="btn-secondary"
-            style={{ width: '100%', justifyContent: 'center', background: 'rgba(30, 215, 96, 0.1)', borderColor: 'rgba(30, 215, 96, 0.3)', color: '#1ed760' }}
+            style={{ width: '100%', justifyContent: 'center', background: 'rgba(30, 215, 96, 0.08)', borderColor: 'rgba(30, 215, 96, 0.25)', color: '#1ed760', fontSize: '0.8rem' }}
           >
-            Escuchar en Spotify <ExternalLink size={14} />
+            Abrir en Spotify <ExternalLink size={14} />
           </a>
         </div>
 
