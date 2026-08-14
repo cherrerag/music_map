@@ -69,6 +69,13 @@ export default function PlaylistCartModal({
     URL.revokeObjectURL(url);
   };
 
+  const handleCopyText = () => {
+    const text = playlistCart.map((t, i) => `${i + 1}. ${t.artistName} - ${t.title}`).join('\n');
+    navigator.clipboard.writeText(`Playlist: ${playlistTitle}\n\n${text}`);
+    setCopiedToast(true);
+    setTimeout(() => setCopiedToast(false), 2500);
+  };
+
   const handleExportCSV = () => {
     let content = "Track Name,Artist Name,Album Name\n";
     playlistCart.forEach(t => {
