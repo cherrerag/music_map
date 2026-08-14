@@ -78,6 +78,6 @@
 ## 6. Hoja de Ruta de Desarrollo
 
 1. **Fase 1 (Completado):** Definición y depuración del PDR.
-2. **Fase 2 (En Progreso):** Prototipo frontend web interactivo (Maqueta local con interfaz visual completa, motor de físicas de nodos en 2D Canvas/SVG, simulación de datos ricos y búsqueda).
-3. **Fase 3:** Integración con backend FastAPI y llaves de APIs (Spotify / Last.fm / MusicBrainz).
+2. **Fase 2 (Completado):** Prototipo frontend web interactivo (Maqueta local con interfaz visual completa, motor de físicas de nodos en 2D Canvas, simulación de datos ricos y reproductor de audio preview).
+3. **Fase 3 (En Progreso):** Integración con backend FastAPI / servicio de clientes de APIs y llaves de acceso (Spotify Web API / Last.fm API / MusicBrainz API).
 4. **Fase 4:** Preparación para despliegue en servidor / nube pública.
