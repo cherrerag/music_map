@@ -37,13 +37,14 @@ export default function App() {
 
   // Add track to playlist cart
   const handleAddToPlaylist = (track, artist) => {
+    const artistName = track.artistName || (artist && artist.name) || "Artista";
     const item = {
-      id: track.id || `${artist.name}-${track.title}`,
+      id: track.id || `${artistName}-${track.title}`,
       title: track.title,
-      artistName: track.artistName || artist.name,
+      artistName: artistName,
       album: track.album || "Single",
       previewUrl: track.previewUrl || "",
-      tidalUrl: artist.tidal_url || `https://listen.tidal.com/search?q=${encodeURIComponent(artist.name + ' ' + track.title)}`
+      tidalUrl: (artist && artist.tidal_url) || `https://listen.tidal.com/search?q=${encodeURIComponent(artistName + ' ' + track.title)}`
     };
 
     setPlaylistCart(prev => {

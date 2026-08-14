@@ -12,46 +12,12 @@ export default function PlaylistCartModal({
   const [playlistTitle, setPlaylistTitle] = useState("Mi Cosecha MusicMap 🌊");
   const [playingIndex, setPlayingIndex] = useState(null);
   const [copiedToast, setCopiedToast] = useState(false);
+  const [showTidalGuide, setShowTidalGuide] = useState(false);
   const audioRef = useRef(null);
 
   if (!isOpen) return null;
 
   const safeCart = Array.isArray(playlistCart) ? playlistCart : [];
-
-  const togglePlayTrack = (idx, track) => {
-    if (!track.previewUrl) return;
-
-    if (playingIndex === idx) {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-      setPlayingIndex(null);
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      const audio = new Audio(track.previewUrl);
-      audio.onended = () => setPlayingIndex(null);
-      audio.onerror = () => setPlayingIndex(null);
-      audio.play().catch(e => console.error("Playback error:", e));
-      audioRef.current = audio;
-      setPlayingIndex(idx);
-    }
-  };
-
-  const handleMove = (index, direction) => {
-    const newCart = [...safeCart];
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= newCart.length) return;
-
-    const temp = newCart[index];
-    newCart[index] = newCart[targetIndex];
-    newCart[targetIndex] = temp;
-    if (onReorderTracks) onReorderTracks(newCart);
-  };
-
-  const [showTidalGuide, setShowTidalGuide] = useState(false);
 
   const handleExportM3U = () => {
     let content = "#EXTM3U\n";
