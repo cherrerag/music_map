@@ -245,6 +245,43 @@ export default function ArtistSidebar({ selectedNode, onClose, onExpandNode }) {
           </button>
         </div>
 
+        {/* Multidimensional Affinity Breakdown Card */}
+        <div className="glass-card" style={{ padding: '12px', border: '1px solid rgba(139, 92, 246, 0.35)', background: 'rgba(139, 92, 246, 0.08)' }}>
+          <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span>Radar de Afinidad Multidimensional</span>
+            <Sparkles size={14} color="#34d399" />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '3px' }}>
+                <span style={{ color: '#c4b5fd' }}>🟣 Afinidad Sonora & Estilo</span>
+                <span style={{ fontWeight: 700, color: '#a78bfa' }}>88%</span>
+              </div>
+              <div style={{ width: '100%', height: '4px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: '88%', height: '100%', background: '#8b5cf6' }} />
+              </div>
+            </div>
+
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '3px' }}>
+                <span style={{ color: '#7dd3fc' }}>🔵 Coincidencia de Audiencia</span>
+                <span style={{ fontWeight: 700, color: '#38bdf8' }}>84%</span>
+              </div>
+              <div style={{ width: '100%', height: '4px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ width: '84%', height: '100%', background: '#00d2ff' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', paddingTop: '4px', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
+              <span style={{ color: '#6ee7b7' }}>🟢 Conexión Geocultural</span>
+              <span style={{ fontWeight: 700, color: '#34d399' }}>
+                {artist.flag} {artist.country}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* Popularity & Genres */}
         <div className="glass-card" style={{ padding: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '6px' }}>

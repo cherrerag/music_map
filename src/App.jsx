@@ -6,8 +6,22 @@ import { SEED_ARTISTS, getArtistDetails } from './data/musicData';
 import { Sparkles, Info, Check } from 'lucide-react';
 
 export default function App() {
+  const detectUserCountry = () => {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      if (tz.includes("Santiago")) return "Chile";
+      if (tz.includes("Buenos_Aires") || tz.includes("Cordoba") || tz.includes("Mendoza")) return "Argentina";
+      if (tz.includes("Mexico")) return "México";
+      if (tz.includes("Madrid")) return "España";
+      if (tz.includes("New_York") || tz.includes("Los_Angeles") || tz.includes("Chicago")) return "Estados Unidos";
+    } catch (e) {
+      console.warn("Timezone detection error:", e);
+    }
+    return "Chile";
+  };
+
   const [currentSeed, setCurrentSeed] = useState(SEED_ARTISTS[0]); // Soda Stereo as initial seed
-  const [userCountry, setUserCountry] = useState("Chile");
+  const [userCountry, setUserCountry] = useState(detectUserCountry);
   const [similarityThreshold, setSimilarityThreshold] = useState(0.70);
   const [onlyLocal, setOnlyLocal] = useState(false);
   const [selectedNode, setSelectedNode] = useState(null);

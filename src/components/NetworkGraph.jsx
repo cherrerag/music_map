@@ -57,12 +57,16 @@ export default function NetworkGraph({
     const width = containerRef.current?.clientWidth || 800;
     const height = containerRef.current?.clientHeight || 600;
 
-    // Create D3 Force Simulation
+    // Create D3 Force Simulation with Orbital Radial Distances
     const sim = d3.forceSimulation(nodes)
-      .force('link', d3.forceLink(links).id(d => d.id).distance(d => 160 * (1.2 - d.weight * 0.5)))
-      .force('charge', d3.forceManyBody().strength(d => d.isSeed ? -600 : -350))
+      .force('link', d3.forceLink(links).id(d => d.id).distance(d => {
+        const isLocalConnection = d.target.country === userCountry || d.source.country === userCountry;
+        // Inner orbit (~110px) for local scene, outer orbit (~190px) for global
+        return isLocalConnection ? 110 : (190 * (1.2 - d.weight * 0.4));
+      }))
+      .force('charge', d3.forceManyBody().strength(d => d.isSeed ? -750 : -320))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collide', d3.forceCollide().radius(d => d.isSeed ? 45 : 30));
+      .force('collide', d3.forceCollide().radius(d => d.isSeed ? 48 : 32));
 
     simulationRef.current = sim;
 
@@ -91,7 +95,29 @@ export default function NetworkGraph({
     const hoveredNode = hoveredNodeRef.current;
     const selectedId = selectedNode?.id;
 
-    // Draw Links (connections)
+    // Find seed node coordinates for Concentric Orbits
+    const seedNode = nodesRef.current.find(n => n.isSeed);
+    if (seedNode && seedNode.x) {
+      // Inner Local Orbit Ring (Green glow)
+      ctx.beginPath();
+      ctx.arc(seedNode.x, seedNode.y, 110, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.15)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.stroke();
+
+      // Outer Global Orbit Ring (Purple glow)
+      ctx.beginPath();
+      ctx.arc(seedNode.x, seedNode.y, 190, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.12)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([8, 8]);
+      ctx.stroke();
+
+      ctx.setLineDash([]); // Reset dash
+    }
+
+    // Draw Multidimensional Links
     linksRef.current.forEach(link => {
       const source = link.source;
       const target = link.target;
@@ -101,18 +127,28 @@ export default function NetworkGraph({
         (hoveredNode && (source.id === hoveredNode.id || target.id === hoveredNode.id)) ||
         (selectedId && (source.id === selectedId || target.id === selectedId));
 
+      const isLocalLink = (source.country === userCountry || target.country === userCountry);
+
       ctx.beginPath();
       ctx.moveTo(source.x, source.y);
       ctx.lineTo(target.x, target.y);
 
+      // Multidimensional Link Color System
+      let linkColor = 'rgba(0, 210, 255, 0.4)'; // Cyan (Global Audience)
+      if (isLocalLink) {
+        linkColor = '#10b981'; // Emerald Green (Local Scene Connection)
+      } else if (link.weight >= 0.85) {
+        linkColor = '#8b5cf6'; // Neon Violet (High Sonic/Style Affinity)
+      }
+
       if (isConnected) {
-        ctx.strokeStyle = '#8b5cf6';
-        ctx.lineWidth = 2.5 * link.weight;
-        ctx.globalAlpha = 0.8;
+        ctx.strokeStyle = linkColor;
+        ctx.lineWidth = 3.5 * link.weight;
+        ctx.globalAlpha = 0.95;
       } else {
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-        ctx.lineWidth = 1 * link.weight;
-        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = linkColor;
+        ctx.lineWidth = 1.2 * link.weight;
+        ctx.globalAlpha = 0.35;
       }
       ctx.stroke();
       ctx.globalAlpha = 1;
@@ -127,16 +163,16 @@ export default function NetworkGraph({
       const isHovered = hoveredNode?.id === node.id;
       const isLocal = node.country === userCountry;
 
-      const radius = isSeed ? 26 : (isHovered || isSelected ? 22 : 18);
+      const radius = isSeed ? 28 : (isHovered || isSelected ? 23 : 18);
 
       // Node Halo Glow
       ctx.beginPath();
       ctx.arc(node.x, node.y, radius + 8, 0, Math.PI * 2);
-      let glowColor = 'rgba(236, 72, 153, 0.2)';
-      if (isSeed) glowColor = 'rgba(139, 92, 246, 0.4)';
-      else if (isLocal) glowColor = 'rgba(16, 185, 129, 0.3)';
+      let glowColor = 'rgba(0, 210, 255, 0.2)';
+      if (isSeed) glowColor = 'rgba(139, 92, 246, 0.45)';
+      else if (isLocal) glowColor = 'rgba(16, 185, 129, 0.35)';
 
-      if (isSelected || isHovered) glowColor = 'rgba(139, 92, 246, 0.6)';
+      if (isSelected || isHovered) glowColor = 'rgba(139, 92, 246, 0.7)';
       
       ctx.fillStyle = glowColor;
       ctx.fill();
@@ -146,19 +182,19 @@ export default function NetworkGraph({
       ctx.arc(node.x, node.y, radius, 0, Math.PI * 2);
       
       // Node Border Color
-      let borderColor = '#ec4899'; // Pink global
+      let borderColor = '#00d2ff'; // Cyan global
       if (isSeed) borderColor = '#8b5cf6'; // Violet seed
       else if (isLocal) borderColor = '#10b981'; // Emerald local
 
       ctx.fillStyle = '#121824';
       ctx.fill();
-      ctx.lineWidth = isSelected || isHovered ? 3 : 2;
+      ctx.lineWidth = isSelected || isHovered ? 3.5 : 2;
       ctx.strokeStyle = borderColor;
       ctx.stroke();
 
       // Node Icon / Indicator inside
       ctx.fillStyle = '#ffffff';
-      ctx.font = `${isSeed ? '14px' : '11px'} Outfit, sans-serif`;
+      ctx.font = `${isSeed ? '15px' : '12px'} Outfit, sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(node.flag || '🎵', node.x, node.y - (isSeed ? 2 : 0));
@@ -176,9 +212,9 @@ export default function NetworkGraph({
 
       ctx.beginPath();
       ctx.roundRect(pillX, pillY, pillW, pillH, 6);
-      ctx.fillStyle = isSelected ? '#8b5cf6' : 'rgba(15, 20, 32, 0.85)';
+      ctx.fillStyle = isSelected ? '#8b5cf6' : (isLocal ? 'rgba(16, 185, 129, 0.25)' : 'rgba(15, 20, 32, 0.85)');
       ctx.fill();
-      ctx.strokeStyle = isSelected ? '#a78bfa' : 'rgba(255, 255, 255, 0.1)';
+      ctx.strokeStyle = isSelected ? '#a78bfa' : (isLocal ? '#34d399' : 'rgba(255, 255, 255, 0.12)');
       ctx.stroke();
 
       // Label Text
@@ -351,7 +387,7 @@ export default function NetworkGraph({
         </button>
       </div>
 
-      {/* Legend overlay */}
+      {/* Multidimensional Legend overlay */}
       <div className="glass-panel" style={{
         position: 'absolute',
         bottom: '24px',
@@ -360,20 +396,20 @@ export default function NetworkGraph({
         display: 'flex',
         alignItems: 'center',
         gap: '16px',
-        fontSize: '0.8rem',
+        fontSize: '0.78rem',
         zIndex: 10
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#8b5cf6', display: 'inline-block' }}></span>
-          <span>Semilla</span>
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#8b5cf6', display: 'inline-block', boxShadow: '0 0 8px #8b5cf6' }}></span>
+          <span>Afinidad Sonora (Estilo)</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }}></span>
-          <span>Local ({userCountry})</span>
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }}></span>
+          <span>Escena Local ({userCountry})</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ec4899', display: 'inline-block' }}></span>
-          <span>Global</span>
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#00d2ff', display: 'inline-block', boxShadow: '0 0 8px #00d2ff' }}></span>
+          <span>Conexión Global</span>
         </div>
       </div>
     </div>
