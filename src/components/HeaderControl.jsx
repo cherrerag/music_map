@@ -238,53 +238,48 @@ export default function HeaderControl({
         )}
       </div>
 
-      {/* Controls & Location Filter */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* Controls & Unified Location/Scene Filter */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         
-        {/* Country Context Dropdown */}
+        {/* Unified Scene & Country Select */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-          <MapPin size={15} style={{ color: '#10b981' }} />
-          <span>Mi Ubicación:</span>
+          <MapPin size={15} style={{ color: onlyLocal ? '#10b981' : '#38bdf8' }} />
           <select
-            value={userCountry}
-            onChange={(e) => onChangeCountry(e.target.value)}
+            value={onlyLocal ? userCountry : "GLOBAL"}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "GLOBAL") {
+                setOnlyLocal(false);
+              } else {
+                setOnlyLocal(true);
+                onChangeCountry(val);
+              }
+            }}
             style={{
-              background: 'rgba(255, 255, 255, 0.08)',
+              background: onlyLocal ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255, 255, 255, 0.08)',
               color: '#fff',
-              border: '1px solid var(--border-glass)',
+              border: '1px solid ' + (onlyLocal ? 'rgba(16, 185, 129, 0.4)' : 'var(--border-glass)'),
               padding: '6px 10px',
               borderRadius: '8px',
               fontSize: '0.8rem',
               outline: 'none',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              fontWeight: 600
             }}
           >
-            <option value="Chile">Chile 🇨🇱</option>
-            <option value="Argentina">Argentina 🇦🇷</option>
-            <option value="México">México 🇲🇽</option>
-            <option value="España">España 🇪🇸</option>
-            <option value="Estados Unidos">EE.UU. 🇺🇸</option>
+            <option value="GLOBAL">🌐 Escena Global</option>
+            <option value="Chile">🇨🇱 Solo Chile</option>
+            <option value="Argentina">🇦🇷 Solo Argentina</option>
+            <option value="México">🇲🇽 Solo México</option>
+            <option value="España">🇪🇸 Solo España</option>
+            <option value="Estados Unidos">🇺🇸 Solo EE.UU.</option>
           </select>
         </div>
-
-        {/* Local Filter Toggle */}
-        <button
-          className="btn-secondary"
-          onClick={() => setOnlyLocal(!onlyLocal)}
-          style={{
-            background: onlyLocal ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255, 255, 255, 0.06)',
-            borderColor: onlyLocal ? 'rgba(16, 185, 129, 0.5)' : 'var(--border-glass)',
-            color: onlyLocal ? '#34d399' : 'var(--text-primary)'
-          }}
-        >
-          <Globe size={15} /> {onlyLocal ? 'Solo Escena Local' : 'Escena Global'}
-        </button>
 
         {/* Network Density (Nodes Limit) Selector */}
         {setNodesLimit && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
             <Sparkles size={15} style={{ color: '#8b5cf6' }} />
-            <span>Afines:</span>
             <select
               value={nodesLimit}
               onChange={(e) => setNodesLimit(parseInt(e.target.value))}
@@ -308,9 +303,9 @@ export default function HeaderControl({
         )}
 
         {/* Similarity Threshold Slider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px' }}>
-          <SlidersHorizontal size={15} style={{ color: 'var(--text-muted)' }} />
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Min Similitud:</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '0 4px' }}>
+          <SlidersHorizontal size={14} style={{ color: 'var(--text-muted)' }} />
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Similitud:</span>
           <input
             type="range"
             min="0.5"
@@ -318,12 +313,29 @@ export default function HeaderControl({
             step="0.05"
             value={similarityThreshold}
             onChange={(e) => setSimilarityThreshold(parseFloat(e.target.value))}
-            style={{ width: '80px', accentColor: '#8b5cf6', cursor: 'pointer' }}
+            style={{ width: '70px', accentColor: '#8b5cf6', cursor: 'pointer' }}
           />
           <span style={{ fontSize: '0.75rem', color: '#c4b5fd', fontWeight: 600 }}>
             {Math.round(similarityThreshold * 100)}%
           </span>
         </div>
+
+        {/* User Account Badge & Logout */}
+        {authenticatedUser && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255, 255, 255, 0.06)', padding: '6px 10px', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
+            <User size={14} color="#00d2ff" />
+            <span style={{ fontSize: '0.78rem', color: '#e0f2fe', fontWeight: 600 }}>
+              {authenticatedUser.split('@')[0]}
+            </span>
+            <button
+              onClick={onLogout}
+              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', marginLeft: '2px' }}
+              title="Cerrar Sesión"
+            >
+              <LogOut size={14} />
+            </button>
+          </div>
+        )}
 
         {/* Playlist Cart Button */}
         <button
@@ -335,33 +347,10 @@ export default function HeaderControl({
             borderColor: playlistCartCount > 0 ? '#00d2ff' : 'var(--border-glass)',
             color: '#fff',
             fontWeight: 700,
-            boxShadow: playlistCartCount > 0 ? '0 0 16px rgba(0, 210, 255, 0.4)' : 'none',
-            position: 'relative'
+            boxShadow: playlistCartCount > 0 ? '0 0 16px rgba(0, 210, 255, 0.4)' : 'none'
           }}
         >
           🛒 Playlist ({playlistCartCount})
-        </button>
-
-        {/* User Account Badge & Logout */}
-        {authenticatedUser && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255, 255, 255, 0.06)', padding: '6px 12px', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
-            <User size={14} color="#00d2ff" />
-            <span style={{ fontSize: '0.78rem', color: '#e0f2fe', fontWeight: 600 }}>
-              {authenticatedUser.split('@')[0]}
-            </span>
-            <button
-              onClick={onLogout}
-              style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', marginLeft: '4px' }}
-              title="Cerrar Sesión"
-            >
-              <LogOut size={14} />
-            </button>
-          </div>
-        )}
-
-        {/* Share Button */}
-        <button className="btn-primary" onClick={onShareMap} style={{ padding: '8px 14px' }}>
-          <Share2 size={15} /> Compartir
         </button>
 
       </div>
