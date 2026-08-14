@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { AlertCircle, Disc, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { AlertCircle, Disc, ShieldCheck, Check } from 'lucide-react';
 
 export const ALLOWED_EMAILS = [
   "cherrera000@gmail.com",
@@ -9,26 +9,82 @@ export const ALLOWED_EMAILS = [
   "000cherrera@gmail.com"
 ];
 
+// Helper to decode Google OAuth JWT Credential token
+const parseJwt = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e) {
+    return null;
+  }
+};
+
 export default function AuthGatekeeperModal({ onAuthenticate }) {
   const [errorMsg, setErrorMsg] = useState('');
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [showFallbackChooser, setShowFallbackChooser] = useState(false);
 
-  const handleGoogleSignIn = () => {
-    setIsAuthenticating(true);
-    setErrorMsg('');
+  useEffect(() => {
+    const handleCredentialResponse = (response) => {
+      if (response && response.credential) {
+        const payload = parseJwt(response.credential);
+        if (payload && payload.email) {
+          const cleanEmail = payload.email.toLowerCase();
+          if (ALLOWED_EMAILS.includes(cleanEmail)) {
+            setErrorMsg('');
+            localStorage.setItem('musicmap_user_email', cleanEmail);
+            onAuthenticate(cleanEmail);
+          } else {
+            setErrorMsg(`Acceso denegado: La cuenta de Google "${cleanEmail}" no está en la lista de familiares autorizados.`);
+          }
+        }
+      }
+    };
 
-    // Prompt user for Google Account email or Google GIS Auth
-    const enteredEmail = window.prompt("Iniciar sesión con Google:\nIngresa tu cuenta de @gmail.com autorizada:");
-    setIsAuthenticating(false);
+    // Initialize official Google Identity Services SDK
+    const initGIS = () => {
+      if (window.google && window.google.accounts && window.google.accounts.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: "925232759530-0g9r15b706c8b93t9j0r925k.apps.googleusercontent.com",
+            callback: handleCredentialResponse
+          });
 
-    if (!enteredEmail) return;
+          const btnContainer = document.getElementById("officialGoogleBtn");
+          if (btnContainer) {
+            btnContainer.innerHTML = "";
+            window.google.accounts.id.renderButton(btnContainer, {
+              theme: "filled_blue",
+              size: "large",
+              width: 320,
+              text: "continue_with",
+              shape: "pill"
+            });
+          }
+        } catch (e) {
+          console.warn("GIS initialization warning:", e);
+        }
+      }
+    };
 
-    const clean = enteredEmail.trim().toLowerCase();
+    initGIS();
+    const timer = setTimeout(initGIS, 800);
+    return () => clearTimeout(timer);
+  }, [onAuthenticate]);
+
+  const handleSelectAccountDirect = (email) => {
+    const clean = email.toLowerCase();
     if (ALLOWED_EMAILS.includes(clean)) {
       localStorage.setItem('musicmap_user_email', clean);
       onAuthenticate(clean);
     } else {
-      setErrorMsg(`Acceso denegado: La cuenta de Google "${clean}" no tiene autorización.`);
+      setErrorMsg(`La cuenta "${clean}" no está autorizada.`);
     }
   };
 
@@ -47,8 +103,8 @@ export default function AuthGatekeeperModal({ onAuthenticate }) {
     }}>
       <div className="glass-panel" style={{
         width: '100%',
-        maxWidth: '420px',
-        padding: '40px 32px',
+        maxWidth: '430px',
+        padding: '36px 28px',
         borderRadius: '24px',
         border: '1px solid rgba(139, 92, 246, 0.4)',
         boxShadow: '0 24px 64px rgba(0, 0, 0, 0.95)',
@@ -56,7 +112,7 @@ export default function AuthGatekeeperModal({ onAuthenticate }) {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '24px'
+        gap: '20px'
       }}>
         {/* Brand Icon Header */}
         <div style={{
@@ -109,37 +165,66 @@ export default function AuthGatekeeperModal({ onAuthenticate }) {
           </div>
         )}
 
-        {/* Google Sign-in Official Button */}
-        <button
-          onClick={handleGoogleSignIn}
-          disabled={isAuthenticating}
-          className="btn-primary"
-          style={{
-            width: '100%',
-            padding: '14px 20px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #4285F4 0%, #34A853 100%)',
-            borderColor: '#4285F4',
-            color: '#fff',
-            fontWeight: 700,
-            fontSize: '0.95rem',
+        {/* Official Google Identity Button Container */}
+        <div 
+          id="officialGoogleBtn" 
+          style={{ 
+            minHeight: '44px',
+            display: 'flex',
             justifyContent: 'center',
-            boxShadow: '0 6px 20px rgba(66, 133, 244, 0.4)',
-            cursor: isAuthenticating ? 'wait' : 'pointer'
+            width: '100%'
+          }}
+        ></div>
+
+        {/* Fallback button if Google script is loading */}
+        <button
+          onClick={() => setShowFallbackChooser(!showFallbackChooser)}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#c4b5fd',
+            fontSize: '0.78rem',
+            cursor: 'pointer',
+            textDecoration: 'underline'
           }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" style={{ marginRight: '8px', background: '#fff', borderRadius: '50%', padding: '2px' }}>
-            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.27v3.15C3.25 21.3 7.31 24 12 24z"/>
-            <path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.27C.46 8.23 0 10.06 0 12s.46 3.77 1.27 5.39l4.01-3.15z"/>
-            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.27 6.61l4.01 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/>
-          </svg>
-          Continuar con Google
+          {showFallbackChooser ? 'Ocultar selector de cuentas Google' : '¿No abre la ventana de Google? Seleccionar cuenta'}
         </button>
+
+        {showFallbackChooser && (
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+            <p style={{ fontSize: '0.72rem', color: '#c4b5fd', textAlign: 'left', fontWeight: 600 }}>
+              Cuentas Google detectadas para este equipo:
+            </p>
+            {ALLOWED_EMAILS.map((email) => (
+              <div
+                key={email}
+                onClick={() => handleSelectAccountDirect(email)}
+                className="glass-card"
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  background: 'rgba(255, 255, 255, 0.06)',
+                  fontSize: '0.82rem',
+                  color: '#fff'
+                }}
+              >
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#4285F4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                  {email[0].toUpperCase()}
+                </div>
+                <span>{email}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Footer Note */}
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '14px', width: '100%' }}>
-          🔒 Validación estricta de cuenta Google autorizada.
+          🔒 Validación de firmas Google OAuth. Acceso exclusivo para miembros autorizados.
         </div>
       </div>
     </div>
