@@ -24,3 +24,8 @@ __pycache__/
 .env
 .env.local
 .env.*.local
+
+# Private local documentation & scratch files
+docs_local/
+scratch/
+
