@@ -78,22 +78,25 @@ export default function App() {
     loadNetwork();
   }, [currentSeed, userCountry]);
 
-  // Handler for expanding red from any node
+  // Handler for expanding network from any node dynamically
   const handleExpandNode = async (nodeToExpand) => {
     showToast(`Expandiendo red para ${nodeToExpand.name}...`);
+    const cleanName = nodeToExpand.name.replace(/ (Session|Constelación Local|Onda Sintética|Colectivo Fusión|expanded-\d+|Fans|sim-\d+)/gi, '').trim();
+
     const API_BASE = import.meta.env.VITE_API_URL !== undefined 
       ? import.meta.env.VITE_API_URL 
       : (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
+    // 1. Try backend serverless API
     try {
-      const res = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(nodeToExpand.name)}&user_country=${encodeURIComponent(userCountry)}`);
+      const res = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(cleanName)}&user_country=${encodeURIComponent(userCountry)}`);
       if (res.ok) {
         const data = await res.json();
         if (data && data.nodes && data.nodes.length > 0) {
           setGraphData(prev => {
             const existingNodeIds = new Set(prev.nodes.map(n => n.id));
-            const addedNodes = data.nodes.filter(n => !existingNodeIds.has(n.id));
-            const addedLinks = data.links;
+            const addedNodes = data.nodes.filter(n => !existingNodeIds.has(n.id) && n.name.toLowerCase() !== cleanName.toLowerCase());
+            const addedLinks = data.links || [];
             return {
               nodes: [...prev.nodes, ...addedNodes],
               links: [...prev.links, ...addedLinks]
@@ -103,54 +106,45 @@ export default function App() {
         }
       }
     } catch (err) {
-      console.warn("Backend API offline during expand, using fallback expansion:", err);
+      console.warn("Backend API offline during expand, attempting direct Last.fm client fetch:", err);
     }
 
-    // Real artists fallback map for node expansion
-    const realSimilarsMap = {
-      "the-cure": [
-        { id: "joy-division", name: "Joy Division", country: "Reino Unido", flag: "🇬🇧", similarity: 0.92, genres: ["Post-Punk"] },
-        { id: "new-order", name: "New Order", country: "Reino Unido", flag: "🇬🇧", similarity: 0.88, genres: ["Synth-Pop"] },
-        { id: "depeche-mode", name: "Depeche Mode", country: "Reino Unido", flag: "🇬🇧", similarity: 0.86, genres: ["Synth-Pop"] },
-        { id: "interpol", name: "Interpol", country: "Estados Unidos", flag: "🇺🇸", similarity: 0.82, genres: ["Indie Rock"] }
-      ]
-    };
-
-    const details = getArtistDetails(nodeToExpand);
-    const newSimilars = (details.similar && details.similar.length > 0) 
-      ? details.similar 
-      : (realSimilarsMap[nodeToExpand.id] || [
-          { id: `${nodeToExpand.id}-sim-1`, name: `${nodeToExpand.name}`, country: nodeToExpand.country, flag: nodeToExpand.flag, similarity: 0.85, genres: nodeToExpand.genres }
-        ]);
-
-    setGraphData(prev => {
-      const existingNodeIds = new Set(prev.nodes.map(n => n.id));
-      const addedNodes = [];
-      const addedLinks = [];
-
-      newSimilars.forEach(sim => {
-        if (!existingNodeIds.has(sim.id)) {
-          addedNodes.push({
-            id: sim.id,
-            name: sim.name,
-            country: sim.country,
-            flag: sim.flag,
+    // 2. Direct browser fetch from Last.fm API as client-side fallback
+    try {
+      const lastfmRes = await fetch(`https://ws.audioscrobbler.com/2.0/?method=artist.getsimilar&artist=${encodeURIComponent(cleanName)}&api_key=b25b959554ed76058ac220b7b2e0a026&format=json&limit=6`);
+      if (lastfmRes.ok) {
+        const data = await lastfmRes.json();
+        const similar = data?.similarartists?.artist;
+        if (similar && similar.length > 0) {
+          const newNodes = similar.map((item) => ({
+            id: item.name.toLowerCase().replace(/\s+/g, '-'),
+            name: item.name,
+            country: "Escena Global",
+            flag: "🎵",
             isSeed: false,
-            genres: sim.genres
-          });
-        }
-        addedLinks.push({
-          source: nodeToExpand.id,
-          target: sim.id,
-          weight: sim.similarity || 0.80
-        });
-      });
+            genres: nodeToExpand.genres || ["Rock"]
+          }));
 
-      return {
-        nodes: [...prev.nodes, ...addedNodes],
-        links: [...prev.links, ...addedLinks]
-      };
-    });
+          setGraphData(prev => {
+            const existingNodeIds = new Set(prev.nodes.map(n => n.id));
+            const addedNodes = newNodes.filter(n => !existingNodeIds.has(n.id) && n.name.toLowerCase() !== cleanName.toLowerCase());
+            const addedLinks = addedNodes.map((n, i) => ({
+              source: nodeToExpand.id,
+              target: n.id,
+              weight: 0.85 - i * 0.05
+            }));
+
+            return {
+              nodes: [...prev.nodes, ...addedNodes],
+              links: [...prev.links, ...addedLinks]
+            };
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      console.error("Last.fm client expansion error:", err);
+    }
   };
 
   const showToast = (msg) => {
