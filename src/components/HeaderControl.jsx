@@ -330,11 +330,15 @@ export default function HeaderControl({
               color: '#ef4444',
               borderColor: 'rgba(239, 68, 68, 0.3)',
               fontSize: '0.8rem',
-              fontWeight: 600
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
             title="Cerrar Sesión"
           >
-            <LogOut size={15} /> Cerrar Sesión
+            🚪 Cerrar Sesión
           </button>
         )}
 

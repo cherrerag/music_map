@@ -30,6 +30,7 @@ export default function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('musicmap_user_email');
+    localStorage.removeItem('musicmap_token');
     setAuthenticatedUser(null);
     showToast("Sesión cerrada");
   };
