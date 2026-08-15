@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { AlertCircle, Disc } from 'lucide-react';
+import React, { useState } from 'react';
+import { AlertCircle, Disc, KeyRound, ShieldCheck } from 'lucide-react';
 
 export const ALLOWED_EMAILS = [
   "cherrera000@gmail.com",
@@ -11,108 +11,25 @@ export const ALLOWED_EMAILS = [
   "friend@gmail.com"
 ];
 
-// Helper to decode Google OAuth JWT Token
-function parseJwt(token) {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split('')
-        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-        .join('')
-    );
-    return JSON.parse(jsonPayload);
-  } catch (e) {
-    console.error("Error descodificando JWT:", e);
-    return null;
-  }
-}
-
 export default function AuthGatekeeperModal({ onAuthenticate }) {
+  const [emailInput, setEmailInput] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
-  const [isGsiLoaded, setIsGsiLoaded] = useState(false);
-  const googleBtnRef = useRef(null);
 
-  // Client ID configurable via VITE_GOOGLE_CLIENT_ID or fallback default
-  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "1089278370954-gsi.apps.googleusercontent.com";
-
-  const handleCredentialResponse = (response) => {
+  const handleSubmit = (e) => {
+    e.preventDefault();
     setErrorMsg('');
-    if (!response || !response.credential) {
-      setErrorMsg('No se recibió la credencial de autenticación de Google.');
+
+    if (!emailInput.trim()) {
+      setErrorMsg('Por favor ingresa tu correo electrónico.');
       return;
     }
 
-    const payload = parseJwt(response.credential);
-    if (!payload || !payload.email) {
-      setErrorMsg('No se pudo verificar el correo electrónico en la respuesta de Google.');
-      return;
-    }
-
-    const cleanEmail = payload.email.trim().toLowerCase();
-    if (ALLOWED_EMAILS.includes(cleanEmail)) {
-      localStorage.setItem('musicmap_token', response.credential);
-      localStorage.setItem('musicmap_user_email', cleanEmail);
-      onAuthenticate(cleanEmail);
+    const clean = emailInput.trim().toLowerCase();
+    if (ALLOWED_EMAILS.includes(clean)) {
+      localStorage.setItem('musicmap_user_email', clean);
+      onAuthenticate(clean);
     } else {
-      setErrorMsg(`Acceso denegado: La cuenta de Google "${cleanEmail}" no está autorizada para acceder.`);
-    }
-  };
-
-  useEffect(() => {
-    const initializeGsi = () => {
-      if (window.google?.accounts?.id) {
-        try {
-          window.google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: handleCredentialResponse,
-            auto_select: false,
-            cancel_on_tap_outside: true,
-          });
-
-          if (googleBtnRef.current) {
-            googleBtnRef.current.innerHTML = '';
-            window.google.accounts.id.renderButton(googleBtnRef.current, {
-              type: 'standard',
-              theme: 'outline',
-              size: 'large',
-              text: 'continue_with',
-              shape: 'rectangular',
-              logo_alignment: 'left',
-              width: 320,
-              locale: 'es'
-            });
-          }
-          setIsGsiLoaded(true);
-        } catch (err) {
-          console.error("Error al inicializar GIS:", err);
-        }
-      }
-    };
-
-    initializeGsi();
-
-    const interval = setInterval(() => {
-      if (window.google?.accounts?.id && !isGsiLoaded) {
-        initializeGsi();
-        clearInterval(interval);
-      }
-    }, 300);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleFallbackClick = () => {
-    setErrorMsg('');
-    if (window.google?.accounts?.id) {
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          console.log("GIS prompt notification reason:", notification.getNotDisplayedReason());
-        }
-      });
-    } else {
-      setErrorMsg('Cargando Google Identity Services... Intenta nuevamente en un momento.');
+      setErrorMsg(`Acceso denegado: La cuenta "${clean}" no tiene autorización para acceder.`);
     }
   };
 
@@ -169,7 +86,7 @@ export default function AuthGatekeeperModal({ onAuthenticate }) {
             Acceso Privado
           </h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '8px', lineHeight: 1.4 }}>
-            Inicia sesión con tu cuenta oficial de <b>Google</b> para acceder a <b>MusicMap 🌊</b>
+            Ingresa tu correo autorizado para acceder a <b>MusicMap 🌊</b>
           </p>
         </div>
 
@@ -193,46 +110,64 @@ export default function AuthGatekeeperModal({ onAuthenticate }) {
           </div>
         )}
 
-        {/* Official Google Sign-In Button Container */}
-        <div style={{ width: '100%', display: 'flex', justifyContent: 'center', minHeight: '44px' }}>
-          <div ref={googleBtnRef} style={{ width: '100%', display: 'flex', justifyContent: 'center' }}></div>
-          {!isGsiLoaded && (
-            <button
-              onClick={handleFallbackClick}
-              className="btn-primary"
+        {/* Form Auth with Input */}
+        <form onSubmit={handleSubmit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="glass-card" style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '12px 16px',
+            gap: '10px',
+            borderRadius: '12px',
+            border: '1px solid rgba(139, 92, 246, 0.3)'
+          }}>
+            <KeyRound size={18} style={{ color: '#c4b5fd' }} />
+            <input
+              type="text"
+              placeholder="Tu correo electrónico..."
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
               style={{
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: '#fff',
+                fontSize: '0.9rem',
                 width: '100%',
-                padding: '12px 20px',
-                borderRadius: '12px',
-                background: '#ffffff',
-                borderColor: '#dadce0',
-                color: '#3c4043',
-                fontWeight: 600,
-                fontSize: '0.95rem',
-                justifyContent: 'center',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.2)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center'
+                fontFamily: 'var(--font-body)'
               }}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" style={{ marginRight: '10px' }}>
-                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
-                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.11-6.72-4.96H1.27v3.15C3.25 21.3 7.31 24 12 24z"/>
-                <path fill="#FBBC05" d="M5.28 14.24c-.25-.72-.38-1.49-.38-2.24s.13-1.52.38-2.24V6.61H1.27C.46 8.23 0 10.06 0 12s.46 3.77 1.27 5.39l4.01-3.15z"/>
-                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.7 1.27 6.61l4.01 3.15c.95-2.85 3.6-4.96 6.72-4.96z"/>
-              </svg>
-              Continuar con Google
-            </button>
-          )}
-        </div>
+              autoFocus
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="btn-primary"
+            style={{
+              width: '100%',
+              padding: '14px 20px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #00d2ff 100%)',
+              borderColor: '#8b5cf6',
+              color: '#fff',
+              fontWeight: 700,
+              fontSize: '0.95rem',
+              justifyContent: 'center',
+              boxShadow: '0 6px 20px rgba(139, 92, 246, 0.4)',
+              cursor: 'pointer'
+            }}
+          >
+            <ShieldCheck size={18} style={{ marginRight: '8px' }} />
+            Ingresar a MusicMap
+          </button>
+        </form>
 
         {/* Footer Note */}
         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '14px', width: '100%' }}>
-          🔒 Autenticación oficial mediante Google OAuth 2.0.
+          🔒 Validación estricta por lista de correos autorizados.
         </div>
       </div>
     </div>
   );
 }
+
 
