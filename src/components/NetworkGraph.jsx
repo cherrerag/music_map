@@ -343,6 +343,27 @@ export default function NetworkGraph({
     simulationRef.current?.alpha(0.8).restart();
   };
 
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      handleMouseDown({ clientX: touch.clientX, clientY: touch.clientY });
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      handleMouseMove({ clientX: touch.clientX, clientY: touch.clientY });
+    }
+  };
+
+  const handleTouchEnd = (e) => {
+    if (e.changedTouches.length === 1) {
+      const touch = e.changedTouches[0];
+      handleMouseUp({ clientX: touch.clientX, clientY: touch.clientY });
+    }
+  };
+
   return (
     <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
       <canvas
@@ -350,12 +371,15 @@ export default function NetworkGraph({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         onWheel={handleWheel}
         style={{ cursor: 'grab', display: 'block', width: '100%', height: '100%' }}
       />
 
       {/* Floating Canvas Controls */}
-      <div className="glass-panel" style={{
+      <div className="glass-panel mobile-graph-controls" style={{
         position: 'absolute',
         bottom: '24px',
         left: '24px',
@@ -388,7 +412,7 @@ export default function NetworkGraph({
       </div>
 
       {/* Multidimensional Legend overlay */}
-      <div className="glass-panel" style={{
+      <div className="glass-panel mobile-graph-legend" style={{
         position: 'absolute',
         bottom: '24px',
         right: '24px',

@@ -15,9 +15,64 @@ export default function PlaylistCartModal({
   const [showTidalGuide, setShowTidalGuide] = useState(false);
   const audioRef = useRef(null);
 
-  if (!isOpen) return null;
+  // Audio cleanup on unmount or close
+  React.useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
-  const safeCart = Array.isArray(playlistCart) ? playlistCart : [];
+  // Reorder tracks inside cart (move up/down)
+  const handleMove = (index, direction) => {
+    const targetIndex = index + direction;
+    if (targetIndex < 0 || targetIndex >= safeCart.length) return;
+    const updatedCart = [...safeCart];
+    const temp = updatedCart[index];
+    updatedCart[index] = updatedCart[targetIndex];
+    updatedCart[targetIndex] = temp;
+
+    if (playingIndex !== null) {
+      if (playingIndex === index) setPlayingIndex(targetIndex);
+      else if (playingIndex === targetIndex) setPlayingIndex(index);
+    }
+
+    if (onReorderTracks) {
+      onReorderTracks(updatedCart);
+    }
+  };
+
+  // Preview track inside playlist modal
+  const togglePlayTrack = (index, track) => {
+    if (playingIndex === index) {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setPlayingIndex(null);
+      return;
+    }
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+
+    if (!track || !track.previewUrl) return;
+
+    const audio = new Audio(track.previewUrl);
+    audio.onended = () => setPlayingIndex(null);
+    audio.onerror = () => setPlayingIndex(null);
+    audio.play()
+      .then(() => setPlayingIndex(index))
+      .catch((err) => {
+        console.error("Playback error in modal:", err);
+        setPlayingIndex(null);
+      });
+    audioRef.current = audio;
+  };
 
   const handleExportM3U = () => {
     let content = "#EXTM3U\n";
@@ -80,8 +135,12 @@ export default function PlaylistCartModal({
     setShowTidalGuide(true);
   };
 
+  const safeCart = Array.isArray(playlistCart) ? playlistCart : [];
+
+  if (!isOpen) return null;
+
   return (
-    <div style={{
+    <div className="mobile-cart-overlay" style={{
       position: 'fixed',
       inset: 0,
       zIndex: 100,
@@ -93,7 +152,7 @@ export default function PlaylistCartModal({
       padding: '20px',
       animation: 'fadeIn 0.25s ease'
     }}>
-      <div className="glass-panel" style={{
+      <div className="glass-panel mobile-cart-content" style={{
         width: '100%',
         maxWidth: '680px',
         maxHeight: '85vh',

@@ -39,27 +39,78 @@ export default function ArtistSidebar({
     previewUrl: ""
   };
 
-  // Fetch Top 20 real tracks from iTunes API for the artist
+  // Fetch Top 20 real tracks from iTunes API strictly for the selected artist
   useEffect(() => {
     let isCancelled = false;
     if (!cleanArtistName) return;
 
-    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanArtistName)}&entity=song&limit=20`)
+    const targetLower = cleanArtistName.toLowerCase().trim();
+
+    // Helper to strictly check if a track is by the selected artist
+    const isTrackBySelectedArtist = (item) => {
+      if (!item.artistName) return false;
+      const itemArtist = item.artistName.toLowerCase().trim();
+      if (itemArtist === targetLower) return true;
+      if (itemArtist.startsWith(targetLower + ' ') || itemArtist.startsWith(targetLower + ',')) return true;
+      const words = itemArtist.split(/[\s,&\/\-+]+/);
+      if (words.includes(targetLower)) return true;
+      if (targetLower.includes(' ') && itemArtist.includes(targetLower)) return true;
+      return false;
+    };
+
+    // 1. Search for artist ID via musicArtist entity
+    fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanArtistName)}&entity=musicArtist&limit=5`)
       .then(res => res.json())
       .then(data => {
-        if (!isCancelled && data.results && data.results.length > 0) {
-          const tracks = data.results.map(item => ({
-            id: item.trackId ? String(item.trackId) : `${cleanArtistName}-${item.trackName}`,
-            title: item.trackName || cleanArtistName,
-            artistName: item.artistName || cleanArtistName,
-            album: item.collectionName || "Single",
-            duration: "0:30",
-            previewUrl: item.previewUrl
-          }));
-          setDynamicTracks(tracks);
+        if (isCancelled) return;
+
+        let bestArtist = null;
+        if (data.results && data.results.length > 0) {
+          bestArtist = data.results.find(a => (a.artistName || '').toLowerCase().trim() === targetLower) || data.results[0];
         }
+
+        // If artist ID found, lookup songs directly by artistId
+        if (bestArtist && bestArtist.artistId) {
+          return fetch(`https://itunes.apple.com/lookup?id=${bestArtist.artistId}&entity=song&limit=25`)
+            .then(res => res.json())
+            .then(lookupData => {
+              if (isCancelled || !lookupData.results) return;
+              const rawTracks = lookupData.results.filter(item => item.wrapperType === 'track' && item.kind === 'song');
+              const matched = rawTracks.filter(isTrackBySelectedArtist);
+              const finalTracks = (matched.length > 0 ? matched : rawTracks).map(item => ({
+                id: item.trackId ? String(item.trackId) : `${cleanArtistName}-${item.trackName}`,
+                title: item.trackName || cleanArtistName,
+                artistName: item.artistName || cleanArtistName,
+                album: item.collectionName || "Single",
+                duration: "0:30",
+                previewUrl: item.previewUrl
+              }));
+              if (finalTracks.length > 0) {
+                setDynamicTracks(finalTracks);
+              }
+            });
+        }
+
+        // Fallback: search entity=song with limit=50 and strictly filter by artistName
+        return fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(cleanArtistName)}&entity=song&limit=50`)
+          .then(res => res.json())
+          .then(songData => {
+            if (isCancelled || !songData.results) return;
+            const matched = songData.results.filter(isTrackBySelectedArtist);
+            if (matched.length > 0) {
+              const tracks = matched.map(item => ({
+                id: item.trackId ? String(item.trackId) : `${cleanArtistName}-${item.trackName}`,
+                title: item.trackName || cleanArtistName,
+                artistName: item.artistName || cleanArtistName,
+                album: item.collectionName || "Single",
+                duration: "0:30",
+                previewUrl: item.previewUrl
+              }));
+              setDynamicTracks(tracks);
+            }
+          });
       })
-      .catch(err => console.error("iTunes dynamic 20-track fetch error:", err));
+      .catch(err => console.error("iTunes dynamic track fetch error:", err));
 
     return () => {
       isCancelled = true;
@@ -166,7 +217,7 @@ export default function ArtistSidebar({
   if (!artist) return null;
 
   return (
-    <aside className="glass-panel" style={{
+    <aside className="glass-panel mobile-artist-sidebar" style={{
       position: 'absolute',
       top: '16px',
       right: '16px',

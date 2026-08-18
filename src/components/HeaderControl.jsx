@@ -21,6 +21,7 @@ export default function HeaderControl({
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [liveResults, setLiveResults] = useState([]);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Fetch live artist search suggestions from iTunes API when typing
   React.useEffect(() => {
@@ -66,12 +67,12 @@ export default function HeaderControl({
   };
 
   return (
-    <header className="glass-panel" style={{
+    <header className="glass-panel header-container" style={{
       position: 'absolute',
       top: '16px',
       left: '16px',
       right: '16px',
-      height: '64px',
+      minHeight: '64px',
       zIndex: 30,
       padding: '0 20px',
       display: 'flex',
@@ -79,40 +80,67 @@ export default function HeaderControl({
       justifyContent: 'space-between',
       gap: '16px'
     }}>
-      {/* Brand Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        <div style={{
-          width: '38px',
-          height: '38px',
-          borderRadius: '10px',
-          background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: '0 0 16px rgba(139, 92, 246, 0.5)'
-        }}>
-          <Disc size={22} color="#fff" />
-        </div>
-        <div>
-          <h1 style={{
-            fontFamily: 'var(--font-heading)',
-            fontSize: '1.25rem',
-            fontWeight: 800,
-            background: 'linear-gradient(90deg, #fff 0%, #c4b5fd 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            lineHeight: 1
+      {/* Top Header Row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+        {/* Brand Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '10px',
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 0 16px rgba(139, 92, 246, 0.5)'
           }}>
-            MusicMap
-          </h1>
-          <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-            Constelación de Descubrimiento
-          </span>
+            <Disc size={22} color="#fff" />
+          </div>
+          <div>
+            <h1 style={{
+              fontFamily: 'var(--font-heading)',
+              fontSize: '1.25rem',
+              fontWeight: 800,
+              background: 'linear-gradient(90deg, #fff 0%, #c4b5fd 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              lineHeight: 1
+            }}>
+              MusicMap
+            </h1>
+            <span className="brand-title-sub" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+              Constelación de Descubrimiento
+            </span>
+          </div>
+        </div>
+
+        {/* Mobile Header Actions (Cart + Settings Toggle) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <button
+            onClick={onOpenCart}
+            className="btn-primary mobile-toggle-btn"
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.8rem',
+              background: playlistCartCount > 0 ? 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)' : 'rgba(255, 255, 255, 0.08)'
+            }}
+          >
+            🛒 ({playlistCartCount})
+          </button>
+          
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="btn-secondary mobile-toggle-btn"
+            style={{ padding: '8px', cursor: 'pointer' }}
+            title="Filtros y Ajustes"
+          >
+            <SlidersHorizontal size={18} color="#c4b5fd" />
+          </button>
         </div>
       </div>
 
-      {/* Center Search Bar */}
-      <div style={{ position: 'relative', width: '320px' }}>
+      {/* Search Bar Container */}
+      <div className="header-search-container" style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
         <div className="glass-card" style={{
           display: 'flex',
           alignItems: 'center',
@@ -239,7 +267,7 @@ export default function HeaderControl({
       </div>
 
       {/* Controls & Unified Location/Scene Filter */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <div className="header-controls-desktop" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         
         {/* Unified Scene & Country Select */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
@@ -359,6 +387,92 @@ export default function HeaderControl({
         </button>
 
       </div>
+
+      {/* Mobile Expandable Controls Panel */}
+      {isMobileMenuOpen && (
+        <div className="mobile-controls-panel">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#c4b5fd' }}>⚙️ Ajustes del Mapa</span>
+            {authenticatedUser && (
+              <button
+                onClick={onLogout}
+                className="btn-secondary"
+                style={{ padding: '4px 8px', color: '#ef4444', fontSize: '0.75rem' }}
+              >
+                Cerrar Sesión
+              </button>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Escena:</span>
+              <select
+                value={onlyLocal ? userCountry : "GLOBAL"}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "GLOBAL") {
+                    setOnlyLocal(false);
+                  } else {
+                    setOnlyLocal(true);
+                    onChangeCountry(val);
+                  }
+                }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  color: '#fff',
+                  border: '1px solid var(--border-glass)',
+                  padding: '6px 10px',
+                  borderRadius: '8px',
+                  fontSize: '0.8rem'
+                }}
+              >
+                <option value="GLOBAL">🌐 Escena Global</option>
+                <option value="Chile">🇨🇱 Solo Chile</option>
+                <option value="Argentina">🇦🇷 Solo Argentina</option>
+                <option value="México">🇲🇽 Solo México</option>
+                <option value="España">🇪🇸 Solo España</option>
+                <option value="Estados Unidos">🇺🇸 Solo EE.UU.</option>
+              </select>
+            </div>
+
+            {setNodesLimit && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Nodos por expansión:</span>
+                <select
+                  value={nodesLimit}
+                  onChange={(e) => setNodesLimit(parseInt(e.target.value))}
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    color: '#fff',
+                    border: '1px solid var(--border-glass)',
+                    padding: '6px 10px',
+                    borderRadius: '8px',
+                    fontSize: '0.8rem'
+                  }}
+                >
+                  <option value="6">6 Afines (Enfoque)</option>
+                  <option value="10">10 Afines (Estándar)</option>
+                  <option value="15">15 Afines (Galaxia)</option>
+                </select>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Mín. Similitud ({Math.round(similarityThreshold * 100)}%):</span>
+              <input
+                type="range"
+                min="0.5"
+                max="0.95"
+                step="0.05"
+                value={similarityThreshold}
+                onChange={(e) => setSimilarityThreshold(parseFloat(e.target.value))}
+                style={{ width: '110px', accentColor: '#8b5cf6' }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
