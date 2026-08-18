@@ -132,7 +132,7 @@ body {
 }
 
 /* Mobile Responsive Styles */
-.mobile-toggle-btn {
+.mobile-header-actions {
   display: none;
 }
 
@@ -143,9 +143,9 @@ body {
     right: 8px !important;
     height: auto !important;
     min-height: 56px !important;
-    padding: 8px 12px !important;
+    padding: 10px 14px !important;
     flex-wrap: wrap !important;
-    gap: 8px !important;
+    gap: 10px !important;
   }
 
   .brand-title-sub {
@@ -162,17 +162,19 @@ body {
     display: none !important;
   }
 
-  .mobile-toggle-btn {
+  .mobile-header-actions {
     display: flex !important;
+    align-items: center;
+    gap: 8px;
   }
 
   .mobile-controls-panel {
     display: flex !important;
     flex-direction: column;
     gap: 12px;
-    padding: 14px;
+    padding: 14px 0 4px 0;
     width: 100%;
-    margin-top: 6px;
+    order: 4;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
 

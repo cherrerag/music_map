@@ -82,11 +82,13 @@ export default function NetworkGraph({
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const width = canvas.width;
-    const height = canvas.height;
+    const dpr = window.devicePixelRatio || 1;
 
     ctx.save();
-    ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Apply DPR scale for high-density mobile / retina displays
+    ctx.scale(dpr, dpr);
 
     // Apply zoom & pan transformation
     ctx.translate(transform.x, transform.y);
@@ -231,8 +233,8 @@ export default function NetworkGraph({
   useEffect(() => {
     const handleResize = () => {
       if (!containerRef.current || !canvasRef.current) return;
-      const width = containerRef.current.clientWidth;
-      const height = containerRef.current.clientHeight;
+      const width = containerRef.current.clientWidth || window.innerWidth;
+      const height = containerRef.current.clientHeight || window.innerHeight;
       const dpr = window.devicePixelRatio || 1;
 
       canvasRef.current.width = width * dpr;
@@ -240,8 +242,6 @@ export default function NetworkGraph({
       canvasRef.current.style.width = `${width}px`;
       canvasRef.current.style.height = `${height}px`;
 
-      const ctx = canvasRef.current.getContext('2d');
-      ctx.scale(dpr, dpr);
       renderCanvas();
     };
 
@@ -375,7 +375,7 @@ export default function NetworkGraph({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         onWheel={handleWheel}
-        style={{ cursor: 'grab', display: 'block', width: '100%', height: '100%' }}
+        style={{ cursor: 'grab', display: 'block', width: '100%', height: '100%', touchAction: 'none' }}
       />
 
       {/* Floating Canvas Controls */}

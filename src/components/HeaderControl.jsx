@@ -80,67 +80,64 @@ export default function HeaderControl({
       justifyContent: 'space-between',
       gap: '16px'
     }}>
-      {/* Top Header Row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-        {/* Brand Logo */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '10px',
-            background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 0 16px rgba(139, 92, 246, 0.5)'
-          }}>
-            <Disc size={22} color="#fff" />
-          </div>
-          <div>
-            <h1 style={{
-              fontFamily: 'var(--font-heading)',
-              fontSize: '1.25rem',
-              fontWeight: 800,
-              background: 'linear-gradient(90deg, #fff 0%, #c4b5fd 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              lineHeight: 1
-            }}>
-              MusicMap
-            </h1>
-            <span className="brand-title-sub" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-              Constelación de Descubrimiento
-            </span>
-          </div>
+      {/* Brand Logo */}
+      <div className="header-brand" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{
+          width: '38px',
+          height: '38px',
+          borderRadius: '10px',
+          background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 0 16px rgba(139, 92, 246, 0.5)'
+        }}>
+          <Disc size={22} color="#fff" />
         </div>
-
-        {/* Mobile Header Actions (Cart + Settings Toggle) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={onOpenCart}
-            className="btn-primary mobile-toggle-btn"
-            style={{
-              padding: '6px 12px',
-              fontSize: '0.8rem',
-              background: playlistCartCount > 0 ? 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)' : 'rgba(255, 255, 255, 0.08)'
-            }}
-          >
-            🛒 ({playlistCartCount})
-          </button>
-          
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="btn-secondary mobile-toggle-btn"
-            style={{ padding: '8px', cursor: 'pointer' }}
-            title="Filtros y Ajustes"
-          >
-            <SlidersHorizontal size={18} color="#c4b5fd" />
-          </button>
+        <div>
+          <h1 style={{
+            fontFamily: 'var(--font-heading)',
+            fontSize: '1.25rem',
+            fontWeight: 800,
+            background: 'linear-gradient(90deg, #fff 0%, #c4b5fd 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            lineHeight: 1
+          }}>
+            MusicMap
+          </h1>
+          <span className="brand-title-sub" style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+            Constelación de Descubrimiento
+          </span>
         </div>
       </div>
 
+      {/* Mobile Header Actions (Cart + Settings Toggle) */}
+      <div className="mobile-header-actions">
+        <button
+          onClick={onOpenCart}
+          className="btn-primary"
+          style={{
+            padding: '6px 12px',
+            fontSize: '0.8rem',
+            background: playlistCartCount > 0 ? 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)' : 'rgba(255, 255, 255, 0.08)'
+          }}
+        >
+          🛒 ({playlistCartCount})
+        </button>
+        
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="btn-secondary"
+          style={{ padding: '8px', cursor: 'pointer' }}
+          title="Filtros y Ajustes"
+        >
+          <SlidersHorizontal size={18} color="#c4b5fd" />
+        </button>
+      </div>
+
       {/* Search Bar Container */}
-      <div className="header-search-container" style={{ position: 'relative', flex: 1, maxWidth: '320px' }}>
+      <div className="header-search-container" style={{ position: 'relative', width: '320px' }}>
         <div className="glass-card" style={{
           display: 'flex',
           alignItems: 'center',
