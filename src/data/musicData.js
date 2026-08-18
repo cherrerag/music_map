@@ -202,6 +202,16 @@ export function getArtistDetails(node) {
   const dbMatch = REAL_ARTISTS_DB[node.id];
   if (dbMatch) return dbMatch;
 
+  const MUSIC_IMAGES = [
+    "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1511735111819-9a3f7709049c?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?auto=format&fit=crop&w=600&q=80"
+  ];
+  const charSum = (node.id || 'artist').split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const selectedImage = MUSIC_IMAGES[Math.abs(charSum) % MUSIC_IMAGES.length];
+
   // Generate clean procedural data for dynamically expanded nodes
   return {
     id: node.id,
@@ -211,7 +221,7 @@ export function getArtistDetails(node) {
     flag: node.flag || "🎵",
     genres: node.genres || ["Indie", "Alternative"],
     popularity: Math.floor(65 + Math.random() * 25),
-    image: `https://images.unsplash.com/photo-${1500000000000 + Math.floor(Math.random() * 100000)}?auto=format&fit=crop&w=600&q=80`,
+    image: selectedImage,
     bio: `${node.name} es un proyecto representativo del género ${node.genres?.[0] || 'Alternative'} en ${node.country || 'la escena musical'}. Destaca por sus atmósferas envolventes y sonido distintivo.`,
     topTracks: [
       { title: `Hits - ${node.name}`, album: "Single", duration: "0:30", previewUrl: "" }

@@ -21,6 +21,8 @@ export default function ArtistSidebar({
   const artist = selectedNode ? getArtistDetails(selectedNode) : null;
 
   const [dynamicTracks, setDynamicTracks] = useState(null);
+  const [fetchedArtistImage, setFetchedArtistImage] = useState(null);
+  const [imgError, setImgError] = useState(false);
 
   // Clean artist name (strip out any procedural/synthetic suffix)
   const cleanArtistName = (artist?.name || '')
@@ -77,6 +79,13 @@ export default function ArtistSidebar({
               if (isCancelled || !lookupData.results) return;
               const rawTracks = lookupData.results.filter(item => item.wrapperType === 'track' && item.kind === 'song');
               const matched = rawTracks.filter(isTrackBySelectedArtist);
+
+              // Extract real high-resolution album cover artwork if available
+              const sampleTrack = (matched.length > 0 ? matched : rawTracks)[0];
+              if (sampleTrack && sampleTrack.artworkUrl100) {
+                setFetchedArtistImage(sampleTrack.artworkUrl100.replace('100x100bb', '600x600bb'));
+              }
+
               const finalTracks = (matched.length > 0 ? matched : rawTracks).map(item => ({
                 id: item.trackId ? String(item.trackId) : `${cleanArtistName}-${item.trackName}`,
                 title: item.trackName || cleanArtistName,
@@ -98,6 +107,9 @@ export default function ArtistSidebar({
             if (isCancelled || !songData.results) return;
             const matched = songData.results.filter(isTrackBySelectedArtist);
             if (matched.length > 0) {
+              if (matched[0]?.artworkUrl100) {
+                setFetchedArtistImage(matched[0].artworkUrl100.replace('100x100bb', '600x600bb'));
+              }
               const tracks = matched.map(item => ({
                 id: item.trackId ? String(item.trackId) : `${cleanArtistName}-${item.trackName}`,
                 title: item.trackName || cleanArtistName,
@@ -133,6 +145,8 @@ export default function ArtistSidebar({
     setIsSaved(false);
     setAudioProgress(0);
     setDynamicTracks(null);
+    setFetchedArtistImage(null);
+    setImgError(false);
   }, [selectedNode?.id]);
 
   // Clean up audio on unmount
@@ -216,6 +230,8 @@ export default function ArtistSidebar({
 
   if (!artist) return null;
 
+  const coverImage = fetchedArtistImage || artist?.image;
+
   return (
     <aside className="glass-panel mobile-artist-sidebar" style={{
       position: 'absolute',
@@ -231,16 +247,47 @@ export default function ArtistSidebar({
       animation: 'slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
     }}>
       {/* Header Image Cover */}
-      <div style={{ position: 'relative', height: '180px', width: '100%', overflow: 'hidden' }}>
-        <img 
-          src={artist.image} 
-          alt={artist.name} 
-          style={{ width: '100%', height: '100%', objectFit: 'cover', filter: 'brightness(0.75)' }} 
-        />
+      <div style={{
+        position: 'relative',
+        height: '180px',
+        width: '100%',
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #0f172a 100%)'
+      }}>
+        {/* Sleek space background aura / watermark when image is loading or fails */}
+        {(!coverImage || imgError) && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'radial-gradient(circle at center, rgba(139, 92, 246, 0.35) 0%, rgba(15, 20, 32, 0.95) 75%)'
+          }}>
+            <Disc size={90} style={{ opacity: 0.18, color: '#c4b5fd' }} />
+          </div>
+        )}
+
+        {/* Real artwork or fallback image */}
+        {coverImage && !imgError && (
+          <img 
+            src={coverImage} 
+            alt={artist.name} 
+            onError={() => setImgError(true)}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              filter: 'brightness(0.75)',
+              transition: 'opacity 0.3s ease'
+            }} 
+          />
+        )}
+
         <div style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(to top, rgba(15, 20, 32, 1) 0%, transparent 80%)'
+          background: 'linear-gradient(to top, rgba(15, 20, 32, 1) 0%, rgba(15, 20, 32, 0.3) 60%, transparent 100%)'
         }} />
 
         {/* Close button */}
