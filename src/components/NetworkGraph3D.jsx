@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ForceGraph3D from '3d-force-graph';
 import SpriteText from 'three-spritetext';
-import * as THREE from 'three';
-import { ZoomIn, ZoomOut, RefreshCw, Eye, Sparkles, Box, Compass } from 'lucide-react';
+import { RefreshCw, Box, Compass } from 'lucide-react';
 
 export default function NetworkGraph3D({
   graphData,
@@ -12,7 +11,8 @@ export default function NetworkGraph3D({
   onlyLocal,
   userCountry = "Chile",
   onToggleViewMode,
-  is3DMode = true
+  is3DMode = true,
+  pathHistory = []
 }) {
   const containerRef = useRef(null);
   const graphInstanceRef = useRef(null);
@@ -51,52 +51,91 @@ export default function NetworkGraph3D({
       containerRef.current.innerHTML = '';
     }
 
+    // Helper to check if a link is part of the active path history trail
+    const isTrailLink = (link) => {
+      const srcId = typeof link.source === 'object' ? link.source.id : link.source;
+      const tgtId = typeof link.target === 'object' ? link.target.id : link.target;
+      return pathHistory.some((id, i) => {
+        if (i === 0) return false;
+        const prevId = pathHistory[i - 1];
+        return (srcId === prevId && tgtId === id) || (srcId === id && tgtId === prevId);
+      });
+    };
+
     // Initialize 3D Force Graph WebGL Engine
     const Graph = ForceGraph3D()(containerRef.current)
       .graphData(data3D)
       .backgroundColor('#090d16')
-      .nodeRelSize(7)
-      .nodeVal(d => d.isSeed ? 14 : 8)
-      .nodeColor(d => {
-        if (d.id === selectedNode?.id) return '#ec4899'; // Hot pink active
-        if (d.isSeed) return '#8b5cf6'; // Neon Violet seed
-        if (d.country === userCountry) return '#10b981'; // Emerald local
-        return '#00d2ff'; // Cyan global
-      })
-      // 3D Billboard Sprite Text for nodes (Zero-clutter 3D text in space)
+      .nodeRelSize(0) // Hide 3D sphere meshes so they don't obscure text!
+      .nodeVal(0)
+      .nodeThreeObjectExtend(false) // Pure 3D Billboard Text Pill Nodes
       .nodeThreeObject(node => {
-        const sprite = new SpriteText(`${node.flag || '🎵'} ${node.name}`);
         const isSelected = node.id === selectedNode?.id;
-        const isSeed = node.isSeed;
-        const isLocal = node.country === userCountry;
+        const tIdx = pathHistory.indexOf(node.id);
 
-        sprite.color = isSelected ? '#ffffff' : (isSeed ? '#f8fafc' : '#cbd5e1');
-        sprite.textHeight = isSeed ? 6.5 : (isSelected ? 6 : 4.8);
-        sprite.backgroundColor = isSelected ? 'rgba(139, 92, 246, 0.9)' : (isLocal ? 'rgba(16, 185, 129, 0.3)' : 'rgba(15, 20, 32, 0.85)');
-        sprite.borderColor = isSelected ? '#a78bfa' : (isLocal ? '#34d399' : 'rgba(255, 255, 255, 0.2)');
-        sprite.borderWidth = 1.2;
-        sprite.borderRadius = 5;
-        sprite.padding = [3, 6];
+        let prefix = '';
+        let bgColor = 'rgba(15, 20, 32, 0.88)';
+        let borderColor = 'rgba(255, 255, 255, 0.18)';
+        let textColor = '#cbd5e1';
+
+        // Color coding the active path history trail & origin steps
+        if (isSelected) {
+          bgColor = 'rgba(245, 158, 11, 0.95)'; // Golden Amber active focus
+          borderColor = '#fbbf24';
+          textColor = '#ffffff';
+          prefix = '★ ';
+        } else if (tIdx === 0) {
+          bgColor = 'rgba(139, 92, 246, 0.95)'; // Neon Violet (Origen / Semilla Inicial)
+          borderColor = '#c4b5fd';
+          textColor = '#ffffff';
+          prefix = '🌱 ';
+        } else if (tIdx === 1) {
+          bgColor = 'rgba(0, 210, 255, 0.90)'; // Neon Cyan (Primer paso de expansión)
+          borderColor = '#7dd3fc';
+          textColor = '#ffffff';
+          prefix = '① ';
+        } else if (tIdx === 2) {
+          bgColor = 'rgba(236, 72, 153, 0.90)'; // Hot Pink (Segundo paso de expansión)
+          borderColor = '#f472b6';
+          textColor = '#ffffff';
+          prefix = '② ';
+        } else if (node.country === userCountry) {
+          borderColor = '#34d399';
+          bgColor = 'rgba(16, 185, 129, 0.25)';
+          textColor = '#e2e8f0';
+        }
+
+        const sprite = new SpriteText(`${prefix}${node.flag || '🎵'} ${node.name}`);
+        sprite.color = textColor;
+        sprite.textHeight = isSelected ? 6.5 : (tIdx >= 0 ? 5.8 : 4.6);
+        sprite.backgroundColor = bgColor;
+        sprite.borderColor = borderColor;
+        sprite.borderWidth = (isSelected || tIdx >= 0) ? 1.8 : 1.0;
+        sprite.borderRadius = 6;
+        sprite.padding = [4, 8];
         sprite.fontFace = 'Outfit, sans-serif';
         return sprite;
       })
-      .nodeThreeObjectExtend(true)
-      // Multidimensional Link Styling
+
+      // Multidimensional & Trail Link Styling
       .linkColor(link => {
+        if (isTrailLink(link)) return '#f59e0b'; // Gold laser for active path history!
         const source = link.source;
         const target = link.target;
         const isLocalLink = (source.country === userCountry || target.country === userCountry);
-        if (isLocalLink) return 'rgba(16, 185, 129, 0.7)';
-        if ((link.weight || 0.8) >= 0.85) return 'rgba(139, 92, 246, 0.7)';
-        return 'rgba(0, 210, 255, 0.5)';
+        if (isLocalLink) return 'rgba(16, 185, 129, 0.6)';
+        if ((link.weight || 0.8) >= 0.85) return 'rgba(139, 92, 246, 0.6)';
+        return 'rgba(0, 210, 255, 0.35)';
       })
-      .linkWidth(link => (link.weight || 0.8) * 1.8)
-      .linkOpacity(0.55)
+      .linkWidth(link => isTrailLink(link) ? 3.5 : (link.weight || 0.8) * 1.6)
+      .linkOpacity(0.6)
+
       // Glowing Directional Cosmic Particles along Links
-      .linkDirectionalParticles(2)
-      .linkDirectionalParticleWidth(2.5)
-      .linkDirectionalParticleSpeed(d => (d.weight || 0.8) * 0.005)
-      .linkDirectionalParticleColor(l => l.weight >= 0.85 ? '#c4b5fd' : '#7dd3fc')
+      .linkDirectionalParticles(link => isTrailLink(link) ? 5 : 2)
+      .linkDirectionalParticleWidth(link => isTrailLink(link) ? 4.0 : 2.2)
+      .linkDirectionalParticleSpeed(link => isTrailLink(link) ? 0.012 : (link.weight || 0.8) * 0.005)
+      .linkDirectionalParticleColor(link => isTrailLink(link) ? '#fbbf24' : '#7dd3fc')
+
       .onNodeClick(node => {
         onSelectNode(node);
         // Smoothly animate 3D camera to target node
@@ -110,8 +149,8 @@ export default function NetworkGraph3D({
       });
 
     // Configure 3D Force physics parameters for wide 3D dispersion
-    Graph.d3Force('charge').strength(-350);
-    Graph.d3Force('link').distance(l => (l.weight >= 0.85 ? 120 : 180));
+    Graph.d3Force('charge').strength(-380);
+    Graph.d3Force('link').distance(l => (l.weight >= 0.85 ? 130 : 190));
 
     // Enable OrbitControls auto-rotate if active
     const controls = Graph.controls();
@@ -137,7 +176,7 @@ export default function NetworkGraph3D({
         containerRef.current.innerHTML = '';
       }
     };
-  }, [graphData, similarityThreshold, onlyLocal, userCountry, selectedNode]);
+  }, [graphData, similarityThreshold, onlyLocal, userCountry, selectedNode, pathHistory]);
 
   // Toggle auto-rotation in 3D
   const toggleAutoRotate = () => {
@@ -219,7 +258,7 @@ export default function NetworkGraph3D({
         </button>
       </div>
 
-      {/* 3D Multidimensional Legend Overlay */}
+      {/* 3D Path Trail Legend Overlay */}
       <div className="glass-panel mobile-graph-legend" style={{
         position: 'absolute',
         bottom: '24px',
@@ -233,15 +272,19 @@ export default function NetworkGraph3D({
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#8b5cf6', display: 'inline-block', boxShadow: '0 0 8px #8b5cf6' }}></span>
-          <span>Esfera Semilla</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }}></span>
-          <span>Escena Local ({userCountry})</span>
+          <span>🌱 Origen</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#00d2ff', display: 'inline-block', boxShadow: '0 0 8px #00d2ff' }}></span>
-          <span>Escena Global</span>
+          <span>① Paso 1</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ec4899', display: 'inline-block', boxShadow: '0 0 8px #ec4899' }}></span>
+          <span>② Paso 2</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#f59e0b', display: 'inline-block', boxShadow: '0 0 8px #f59e0b' }}></span>
+          <span>★ Activo</span>
         </div>
       </div>
 

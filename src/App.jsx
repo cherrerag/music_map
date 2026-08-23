@@ -306,6 +306,7 @@ export default function App() {
             userCountry={userCountry}
             is3DMode={is3DMode}
             onToggleViewMode={() => setIs3DMode(!is3DMode)}
+            pathHistory={pathHistory}
           />
         ) : (
           <NetworkGraph
@@ -317,6 +318,7 @@ export default function App() {
             userCountry={userCountry}
             is3DMode={is3DMode}
             onToggleViewMode={() => setIs3DMode(!is3DMode)}
+            pathHistory={pathHistory}
           />
         )}
       </main>
