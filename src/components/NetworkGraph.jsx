@@ -54,19 +54,25 @@ export default function NetworkGraph({
     nodesRef.current = nodes;
     linksRef.current = links;
 
-    const width = containerRef.current?.clientWidth || 800;
-    const height = containerRef.current?.clientHeight || 600;
+    const width = containerRef.current?.clientWidth || window.innerWidth;
+    const height = containerRef.current?.clientHeight || window.innerHeight;
 
-    // Create D3 Force Simulation with Orbital Radial Distances
+    // Shift center to the left if sidebar is open (380px width)
+    const sidebarWidth = selectedNode ? 380 : 0;
+    const centerX = Math.max(260, (width - sidebarWidth) / 2);
+    const centerY = height / 2;
+
+    // Create D3 Force Simulation with Spacious 360° Radial & Anti-Overlap Physics
     const sim = d3.forceSimulation(nodes)
       .force('link', d3.forceLink(links).id(d => d.id).distance(d => {
         const isLocalConnection = d.target.country === userCountry || d.source.country === userCountry;
-        // Inner orbit (~110px) for local scene, outer orbit (~190px) for global
-        return isLocalConnection ? 110 : (190 * (1.2 - d.weight * 0.4));
-      }))
-      .force('charge', d3.forceManyBody().strength(d => d.isSeed ? -750 : -320))
-      .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collide', d3.forceCollide().radius(d => d.isSeed ? 48 : 32));
+        // Expanded distance (170px local, up to 260px global) to avoid clumping
+        return isLocalConnection ? 170 : (250 * (1.2 - (d.weight || 0.8) * 0.35));
+      }).strength(0.45))
+      .force('charge', d3.forceManyBody().strength(d => d.isSeed ? -1400 : -750))
+      .force('center', d3.forceCenter(centerX, centerY))
+      .force('collide', d3.forceCollide().radius(d => d.isSeed ? 75 : 62).iterations(4))
+      .force('radial', d3.forceRadial(d => d.isSeed ? 0 : 220, centerX, centerY).strength(0.35));
 
     simulationRef.current = sim;
 
@@ -75,7 +81,7 @@ export default function NetworkGraph({
     });
 
     return () => sim.stop();
-  }, [graphData, similarityThreshold, onlyLocal, userCountry]);
+  }, [graphData, similarityThreshold, onlyLocal, userCountry, selectedNode]);
 
   // Canvas render loop
   const renderCanvas = () => {
@@ -102,7 +108,7 @@ export default function NetworkGraph({
     if (seedNode && seedNode.x) {
       // Inner Local Orbit Ring (Green glow)
       ctx.beginPath();
-      ctx.arc(seedNode.x, seedNode.y, 110, 0, Math.PI * 2);
+      ctx.arc(seedNode.x, seedNode.y, 170, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(16, 185, 129, 0.15)';
       ctx.lineWidth = 1.5;
       ctx.setLineDash([6, 6]);
@@ -110,7 +116,7 @@ export default function NetworkGraph({
 
       // Outer Global Orbit Ring (Purple glow)
       ctx.beginPath();
-      ctx.arc(seedNode.x, seedNode.y, 190, 0, Math.PI * 2);
+      ctx.arc(seedNode.x, seedNode.y, 250, 0, Math.PI * 2);
       ctx.strokeStyle = 'rgba(139, 92, 246, 0.12)';
       ctx.lineWidth = 1.5;
       ctx.setLineDash([8, 8]);
