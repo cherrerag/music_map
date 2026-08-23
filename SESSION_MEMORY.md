@@ -18,17 +18,17 @@
 ## 📌 Estado Actual de las Sesiones
 
 ### Sesión 1 — 23 de Agosto, 2026 (Completada 🟢)
-- **Sprint Activo:** Sprint 1 (v2.0) — Algoritmo por Co-ocurrencia en Playlists Reales e Historial de 3 Pasos.
-- **Objetivo Cumplido:** Cambiar la filosofía de recomendación binaria u opaca por un cálculo transparente de frecuencia de incidencia en playlists públicas curadas por oyentes reales, implementar historial navegable de 3 pasos con poda visual de nodos y actualizar la bitácora completa del proyecto.
-- **Avances Realizados:**
-  1. **Protocolo y Memoria Continua:** Creado e instanciado `SESSION_MEMORY.md` para trazabilidad de sesión en disco.
-  2. **Motor Backend de Co-ocurrencia (`spotify_service.py` & `graph_builder.py`):** Creado el método `get_playlist_cooccurrence()` que busca playlists donde coexiste el artista origen y rankea a los candidatos según el porcentaje de coincidencia.
-  3. **Visualización de Incidencia en Frontend (`ArtistSidebar.jsx`):** Agregada barra e indicador visual (`🎶 Incidencia en Playlists Reales: X%`).
-  4. **Ventana Flotante de Historial de 3 Pasos (`App.jsx`):** Mantenimiento de `pathHistory` (máximo 3 nodos explorados) con filtrado y poda reactiva de nodos/enlaces antiguos para mantener 60 FPS y mapa desahogado.
-  5. **Actualización de Documentación:** Actualizados `PRD_musicmap.md`, `README.md`, `ARCHITECTURE.md`, `TECHNICAL_DECISIONS.md` y `ROADMAP.md`.
-- **Próximos Pasos Pendientes (Sprint 2 / v2.1):**
-  - Prototipar modo de comparación entre 2 artistas origen ("Ruta/Puente entre 2 Artistas").
-  - Integrar autenticación directa OAuth con TIDAL Web API.
+- **Sprint Activo:** Sprint 1 (v2.0 & v2.2) — Algoritmo por Co-ocurrencia en Playlists Reales, Historial de 3 Pasos y Constelación Tridimensional (3D WebGL).
+- **Objetivos Cumplidos:**
+  1. **Co-ocurrencia en Playlists:** Recomendación basada en frecuencia de incidencia en playlists públicas reales (`spotify_service.py` & `graph_builder.py`).
+  2. **Historial de 3 Pasos (`pathHistory`):** Poda automática de nodos lejanos para mantener navegación enfocado.
+  3. **Motor 3D WebGL Cosmic Constellation ([`NetworkGraph3D.jsx`](file:///Users/claudioherreram5/dev/music_map/src/components/NetworkGraph3D.jsx)):** Implementación de constelación tridimensional espacial respaldada en Three.js / WebGL.
+     - Separación natural en profundidad $(z)$ que elimina el 100% del solapamiento de líneas y textos.
+     - Esferas 3D brillantes (Violeta Semilla, Verde Local, Cian Global, Rosa Activo) con etiquetas billboard en espacio 3D.
+     - Láseres de conexión 3D con partículas fluidas en movimiento constante (`linkDirectionalParticles`).
+     - Rotación orbital de cámara, animación suave de enfoque al hacer clic en nodos (`cameraPosition`) y botón de conmutación directa entre `Mode 3D Cosmic` y `Mode 2D Canvas`.
+  4. **Correcciones Vercel:** Resolución de `sys.path` en `api/index.py` y parámetro `limit` de densidad.
+  5. **Trazabilidad en Disco:** Instanciación y actualización de `SESSION_MEMORY.md`, `PRD_musicmap.md`, `README.md`, `TECHNICAL_DECISIONS.md` y `ROADMAP.md`.
 
 ---
 
@@ -36,6 +36,6 @@
 
 ```markdown
 Hola. Vamos a retomar el proyecto MusicMap 🌊. Por favor lee `SESSION_MEMORY.md`, `PRD_musicmap.md` y `README.md`. 
-En el sprint anterior completamos la v2.0 con el algoritmo de co-ocurrencia por coincidencia en playlists reales y la ventana flotante de historial de 3 pasos.
-Ejecuta `git status` para comprobar el estado actual y cuéntame el resumen de lo hecho antes de proponer los siguientes pasos.
+En la sesión anterior completamos la v2.0/v2.2 desplegando el motor 3D WebGL Cosmic Constellation (Three.js), el algoritmo de co-ocurrencia por coincidencia en playlists reales y la ventana flotante de historial de 3 pasos.
+Ejecuta `git status` para comprobar el estado actual y cuéntame el resumen antes de proponer los próximos hitos (ej. Modo Comparativo "Ruta entre 2 Artistas").
 ```
