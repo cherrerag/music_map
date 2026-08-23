@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import HeaderControl from './components/HeaderControl';
 import NetworkGraph from './components/NetworkGraph';
+import NetworkGraph3D from './components/NetworkGraph3D';
 import ArtistSidebar from './components/ArtistSidebar';
 import PlaylistCartModal from './components/PlaylistCartModal';
 import AuthGatekeeperModal, { ALLOWED_EMAILS } from './components/AuthGatekeeperModal';
@@ -42,6 +43,7 @@ export default function App() {
   const [nodesLimit, setNodesLimit] = useState(10); // Default to 10 similar artists for richer discovery
   const [selectedNode, setSelectedNode] = useState(null);
   const [toastMessage, setToastMessage] = useState(null);
+  const [is3DMode, setIs3DMode] = useState(true); // Default to 3D WebGL Constellation mode
 
   // Playlist Cart State & Modal toggle
   const [playlistCart, setPlaylistCart] = useState([]);
@@ -292,16 +294,31 @@ export default function App() {
         onLogout={handleLogout}
       />
 
-      {/* Main Canvas Force Graph */}
+      {/* Main 3D / 2D Constellation Canvas */}
       <main style={{ width: '100%', height: '100%', position: 'absolute', inset: 0 }}>
-        <NetworkGraph
-          graphData={graphData}
-          onSelectNode={setSelectedNode}
-          selectedNode={selectedNode}
-          similarityThreshold={similarityThreshold}
-          onlyLocal={onlyLocal}
-          userCountry={userCountry}
-        />
+        {is3DMode ? (
+          <NetworkGraph3D
+            graphData={graphData}
+            onSelectNode={setSelectedNode}
+            selectedNode={selectedNode}
+            similarityThreshold={similarityThreshold}
+            onlyLocal={onlyLocal}
+            userCountry={userCountry}
+            is3DMode={is3DMode}
+            onToggleViewMode={() => setIs3DMode(!is3DMode)}
+          />
+        ) : (
+          <NetworkGraph
+            graphData={graphData}
+            onSelectNode={setSelectedNode}
+            selectedNode={selectedNode}
+            similarityThreshold={similarityThreshold}
+            onlyLocal={onlyLocal}
+            userCountry={userCountry}
+            is3DMode={is3DMode}
+            onToggleViewMode={() => setIs3DMode(!is3DMode)}
+          />
+        )}
       </main>
 
       {/* Artist Sidebar */}

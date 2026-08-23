@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3-force';
-import { ZoomIn, ZoomOut, RefreshCw, Maximize2, Sparkles, MapPin } from 'lucide-react';
+import { ZoomIn, ZoomOut, RefreshCw, Maximize2, Sparkles, MapPin, Box } from 'lucide-react';
 
 export default function NetworkGraph({ 
   graphData, 
@@ -8,7 +8,9 @@ export default function NetworkGraph({
   selectedNode, 
   similarityThreshold,
   onlyLocal,
-  userCountry = "Chile"
+  userCountry = "Chile",
+  onToggleViewMode,
+  is3DMode = false
 }) {
   const canvasRef = useRef(null);
   const containerRef = useRef(null);
@@ -390,10 +392,26 @@ export default function NetworkGraph({
         bottom: '24px',
         left: '24px',
         display: 'flex',
+        alignItems: 'center',
         gap: '6px',
         padding: '6px',
         zIndex: 10
       }}>
+        {onToggleViewMode && (
+          <button
+            onClick={onToggleViewMode}
+            className="btn-primary"
+            style={{
+              padding: '6px 12px',
+              fontSize: '0.8rem',
+              background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+              fontWeight: 700
+            }}
+            title="Conmutar entre Vista 3D y 2D"
+          >
+            <Box size={16} /> Mode {is3DMode ? '3D Cosmic' : '2D Canvas'}
+          </button>
+        )}
         <button 
           className="btn-secondary" 
           onClick={() => setTransform(p => ({ ...p, k: Math.min(3, p.k * 1.2) }))}
