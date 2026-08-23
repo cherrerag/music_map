@@ -43,13 +43,14 @@ async def search_artists(q: str = Query(..., min_length=1)):
 @app.get("/api/network")
 async def get_artist_network(
     artist: str = Query(..., description="Nombre o ID del artista semilla"),
-    user_country: str = Query("Chile", description="País de referencia del usuario")
+    user_country: str = Query("Chile", description="País de referencia del usuario"),
+    limit: int = Query(10, description="Límite de nodos vecinos en la constelación")
 ):
     """
     Genera el grafo de red completo de un artista combinando Spotify, Last.fm y MusicBrainz
     """
     try:
-        network_data = await build_artist_network(artist, user_country=user_country)
+        network_data = await build_artist_network(artist, user_country=user_country, limit=limit)
         return network_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

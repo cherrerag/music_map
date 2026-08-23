@@ -27,7 +27,7 @@ def get_flag(country: str, country_code: str = "") -> str:
         return FLAG_MAP[country]
     return "🎵"
 
-async def build_artist_network(seed_query: str, user_country: str = "Chile"):
+async def build_artist_network(seed_query: str, user_country: str = "Chile", limit: int = 10):
     # 1. Search for seed artist in Spotify
     spotify_search = await spotify_service.search_artists(seed_query, limit=1)
     
@@ -49,8 +49,8 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
 
     # Parallel retrieval of details, origin, related, similar, and playlist co-occurrence
     spotify_related_task = spotify_service.get_related_artists(seed_id) if spotify_search else asyncio.sleep(0, result=[])
-    playlist_cooccurrence_task = spotify_service.get_playlist_cooccurrence(seed_name, limit=15)
-    lastfm_similar_task = lastfm_service.get_similar_artists(seed_name, limit=10)
+    playlist_cooccurrence_task = spotify_service.get_playlist_cooccurrence(seed_name, limit=max(15, limit * 2))
+    lastfm_similar_task = lastfm_service.get_similar_artists(seed_name, limit=max(15, limit * 2))
     origin_task = musicbrainz_service.get_artist_origin(seed_name)
     top_tracks_task = spotify_service.get_top_tracks(seed_id) if spotify_search else asyncio.sleep(0, result=[])
     seed_audio_task = audio_service.get_real_audio_preview(seed_name, "Hit")
@@ -131,9 +131,12 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
         else:
             candidates[c_id]["similarity"] = round(max(candidates[c_id]["similarity"], match_score), 2)
 
-    # Resolve origins and real audio previews for top candidates
-    candidate_list = list(candidates.values())[:10]
-    for cand in candidate_list:
+    # Resolve origins and real audio previews for top candidates matching requested limit
+    candidate_list = list(candidates.values())[:limit]
+    for idx, cand in enumerate(candidate_list):
+        # Guarantee smooth similarity scaling so candidates pass default slider threshold (>= 0.70)
+        cand_similarity = max(0.72, cand["similarity"])
+        
         cand_origin, cand_audio = await asyncio.gather(
             musicbrainz_service.get_artist_origin(cand["name"]),
             audio_service.get_real_audio_preview(cand["name"], "Hit")
@@ -163,7 +166,7 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
         links.append({
             "source": seed_id,
             "target": cand["id"],
-            "weight": cand["similarity"]
+            "weight": cand_similarity
         })
 
     return {

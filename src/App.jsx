@@ -37,7 +37,7 @@ export default function App() {
 
   const [currentSeed, setCurrentSeed] = useState(SEED_ARTISTS[0]); // Soda Stereo as initial seed
   const [userCountry, setUserCountry] = useState(detectUserCountry);
-  const [similarityThreshold, setSimilarityThreshold] = useState(0.70);
+  const [similarityThreshold, setSimilarityThreshold] = useState(0.50);
   const [onlyLocal, setOnlyLocal] = useState(false);
   const [nodesLimit, setNodesLimit] = useState(10); // Default to 10 similar artists for richer discovery
   const [selectedNode, setSelectedNode] = useState(null);
