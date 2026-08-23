@@ -7,7 +7,9 @@ export default function ArtistSidebar({
   onClose, 
   onExpandNode,
   onAddToPlaylist,
-  playlistCart = []
+  playlistCart = [],
+  tidalUser,
+  onOpenTidalModal
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -602,8 +604,17 @@ export default function ArtistSidebar({
             className="btn-primary"
             style={{ width: '100%', justifyContent: 'center', background: 'linear-gradient(135deg, #00d2ff 0%, #0072ff 100%)', borderColor: '#00d2ff', color: '#fff', fontWeight: 700 }}
           >
-            Escuchar en TIDAL 🌊 <ExternalLink size={14} />
+            {tidalUser?.isLinked ? '🌊 Escuchar en mi TIDAL (Cuenta Activa)' : 'Escuchar en TIDAL 🌊'} <ExternalLink size={14} />
           </a>
+          {!tidalUser?.isLinked && onOpenTidalModal && (
+            <button
+              onClick={onOpenTidalModal}
+              className="btn-secondary"
+              style={{ width: '100%', justifyContent: 'center', color: '#00d2ff', borderColor: 'rgba(0, 210, 255, 0.3)', fontSize: '0.78rem' }}
+            >
+              🌊 Vincular tu cuenta de TIDAL
+            </button>
+          )}
           <a 
             href={`https://open.spotify.com/search/${encodeURIComponent(artist.name)}`}
             target="_blank"

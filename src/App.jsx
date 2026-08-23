@@ -4,6 +4,7 @@ import NetworkGraph from './components/NetworkGraph';
 import NetworkGraph3D from './components/NetworkGraph3D';
 import ArtistSidebar from './components/ArtistSidebar';
 import PlaylistCartModal from './components/PlaylistCartModal';
+import TidalLinkModal from './components/TidalLinkModal';
 import AuthGatekeeperModal, { ALLOWED_EMAILS } from './components/AuthGatekeeperModal';
 import { SEED_ARTISTS, getArtistDetails } from './data/musicData';
 import { Sparkles, Info, Check } from 'lucide-react';
@@ -48,6 +49,17 @@ export default function App() {
   // Playlist Cart State & Modal toggle
   const [playlistCart, setPlaylistCart] = useState([]);
   const [isCartModalOpen, setIsCartModalOpen] = useState(false);
+
+  // TIDAL User Account Session State
+  const [tidalUser, setTidalUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('musicmap_tidal_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch(e) {
+      return null;
+    }
+  });
+  const [isTidalModalOpen, setIsTidalModalOpen] = useState(false);
 
   // Graph state (nodes and links)
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
@@ -292,6 +304,8 @@ export default function App() {
         setNodesLimit={setNodesLimit}
         authenticatedUser={authenticatedUser}
         onLogout={handleLogout}
+        tidalUser={tidalUser}
+        onOpenTidalModal={() => setIsTidalModalOpen(true)}
       />
 
       {/* Main 3D / 2D Constellation Canvas */}
@@ -331,6 +345,8 @@ export default function App() {
           onExpandNode={handleExpandNode}
           onAddToPlaylist={handleAddToPlaylist}
           playlistCart={playlistCart}
+          tidalUser={tidalUser}
+          onOpenTidalModal={() => setIsTidalModalOpen(true)}
         />
       )}
 
@@ -342,6 +358,16 @@ export default function App() {
         onRemoveTrack={handleRemoveFromPlaylist}
         onClearPlaylist={handleClearPlaylist}
         onReorderTracks={handleReorderPlaylist}
+        tidalUser={tidalUser}
+        onOpenTidalModal={() => setIsTidalModalOpen(true)}
+      />
+
+      {/* TIDAL Link Modal */}
+      <TidalLinkModal
+        isOpen={isTidalModalOpen}
+        onClose={() => setIsTidalModalOpen(false)}
+        onLinkTidal={setTidalUser}
+        tidalUser={tidalUser}
       />
 
       {/* Toast Notification */}

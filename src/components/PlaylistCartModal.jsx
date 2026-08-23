@@ -7,7 +7,9 @@ export default function PlaylistCartModal({
   playlistCart = [], 
   onRemoveTrack, 
   onClearPlaylist,
-  onReorderTracks
+  onReorderTracks,
+  tidalUser,
+  onOpenTidalModal
 }) {
   const [playlistTitle, setPlaylistTitle] = useState("Mi Cosecha MusicMap 🌊");
   const [playingIndex, setPlayingIndex] = useState(null);
@@ -205,7 +207,9 @@ export default function PlaylistCartModal({
               <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
                 <span>🛒 {safeCart.length} Canciones guardadas</span>
                 <span>•</span>
-                <span style={{ color: '#00d2ff', fontWeight: 600 }}>Lista para TIDAL 🌊</span>
+                <span style={{ color: tidalUser?.isLinked ? '#34d399' : '#00d2ff', fontWeight: 600 }}>
+                  {tidalUser?.isLinked ? '🌊 TIDAL Vinculado (Sincronización Directa)' : 'Lista para TIDAL 🌊'}
+                </span>
               </div>
             </div>
           </div>

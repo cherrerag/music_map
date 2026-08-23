@@ -16,7 +16,9 @@ export default function HeaderControl({
   nodesLimit = 10,
   setNodesLimit,
   authenticatedUser,
-  onLogout
+  onLogout,
+  tidalUser,
+  onOpenTidalModal
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -344,6 +346,29 @@ export default function HeaderControl({
             {Math.round(similarityThreshold * 100)}%
           </span>
         </div>
+
+        {/* TIDAL Link Account Button */}
+        {onOpenTidalModal && (
+          <button
+            onClick={onOpenTidalModal}
+            className="btn-secondary"
+            style={{
+              padding: '8px 12px',
+              color: '#00d2ff',
+              background: tidalUser?.isLinked ? 'rgba(0, 210, 255, 0.15)' : 'rgba(255, 255, 255, 0.08)',
+              borderColor: tidalUser?.isLinked ? 'rgba(0, 210, 255, 0.4)' : 'var(--border-glass)',
+              fontSize: '0.8rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+            title="Vincular tu cuenta de TIDAL 🌊"
+          >
+            {tidalUser?.isLinked ? '🌊 TIDAL Activo' : '🌊 Vincular TIDAL'}
+          </button>
+        )}
 
         {/* User Logout Button */}
         {authenticatedUser && (
