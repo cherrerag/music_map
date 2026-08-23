@@ -77,12 +77,11 @@ music_map/
 - [x] **Cliente MusicBrainz API:** Resolución de países y ciudades de origen con sistema de caché en memoria.
 - [x] **Conexión Frontend:** `src/App.jsx` y `src/components/HeaderControl.jsx` consultan el backend en vivo con fallback transparente.
 
-### 🟢 Fase 4: Preparación para Despliegue en Producción (Completado)
-- [x] **Soporte Vercel:** Creado `vercel.json` para enrutamiento SPA automático.
-- [x] **Soporte Render:** Creado `render.yaml` Blueprint para despliegue sin configuración manual del backend en Render.
-- [x] **Containerización Docker:** Creados `Dockerfile` (Multi-stage Node+Nginx para Frontend) y `backend/Dockerfile` (Python slim).
-- [x] **Orquestador Docker Compose:** Archivo `docker-compose.yml` para ejecutar toda la pila con `docker compose up -d`.
-- [x] **Guía de Despliegue:** Documento `DEPLOYMENT.md` actualizado.
+### 🟢 Fase 5: Algoritmo de Afinidad por Co-ocurrencia & Historial de 3 Pasos (Completado)
+- [x] **Co-ocurrencia en Playlists Públicas (`spotify_service.py` / `graph_builder.py`):** Búsqueda de coincidencia humana real basada en el número de playlists donde conviven los artistas.
+- [x] **Indicador de Incidencia Real:** Renderizado del porcentaje `🎶 Incidencia en Playlists Reales` en `ArtistSidebar.jsx`.
+- [x] **Ventana Flotante de Historial (3 Pasos):** Poda automática de nodos fuera de los últimos 3 pasos navegados para garantizar máxima claridad visual y 60 FPS.
+- [x] **Bitácora Persistente de Memoria (`SESSION_MEMORY.md`):** Definición del protocolo de apertura y cierre de sesiones.
 
 ---
 

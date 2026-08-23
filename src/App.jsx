@@ -49,6 +49,7 @@ export default function App() {
 
   // Graph state (nodes and links)
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
+  const [pathHistory, setPathHistory] = useState([]); // Max 3 step active path history
 
   // Add track to playlist cart
   const handleAddToPlaylist = (track, artist) => {
@@ -106,6 +107,7 @@ export default function App() {
           if (data && data.nodes && data.nodes.length > 0) {
             setGraphData(data);
             setSelectedNode(data.nodes[0]);
+            setPathHistory([data.nodes[0].id]);
             return;
           }
         }
@@ -146,15 +148,23 @@ export default function App() {
       });
 
       setSelectedNode(seedNode);
+      setPathHistory([seedNode.id]);
     }
 
     loadNetwork();
   }, [currentSeed, userCountry, nodesLimit]);
 
-  // Handler for expanding network from any node dynamically
+  // Handler for expanding network from any node dynamically (keeping a 3-step active trail)
   const handleExpandNode = async (nodeToExpand) => {
     showToast(`Expandiendo red para ${nodeToExpand.name}...`);
     const cleanName = nodeToExpand.name.replace(/ (Session|Constelación Local|Onda Sintética|Colectivo Fusión|expanded-\d+|Fans|sim-\d+)/gi, '').trim();
+
+    // Update path history trail (keep max 3 recent steps)
+    let newHistory = [];
+    setPathHistory(prev => {
+      newHistory = [...prev, nodeToExpand.id].slice(-3);
+      return newHistory;
+    });
 
     const API_BASE = import.meta.env.VITE_API_URL !== undefined 
       ? import.meta.env.VITE_API_URL 
@@ -170,9 +180,30 @@ export default function App() {
             const existingNodeIds = new Set(prev.nodes.map(n => n.id));
             const addedNodes = data.nodes.filter(n => !existingNodeIds.has(n.id) && n.name.toLowerCase() !== cleanName.toLowerCase());
             const addedLinks = data.links || [];
+
+            // Prune nodes older than 3 steps away from the active trail
+            const activeTrailSet = new Set(newHistory.length > 0 ? newHistory : [nodeToExpand.id]);
+            const allLinks = [...prev.links, ...addedLinks];
+
+            // Keep nodes if they are in the active trail or connected to an active trail node
+            const allowedNodeIds = new Set(activeTrailSet);
+            allLinks.forEach(l => {
+              const srcId = typeof l.source === 'object' ? l.source.id : l.source;
+              const tgtId = typeof l.target === 'object' ? l.target.id : l.target;
+              if (activeTrailSet.has(srcId)) allowedNodeIds.add(tgtId);
+              if (activeTrailSet.has(tgtId)) allowedNodeIds.add(srcId);
+            });
+
+            const filteredNodes = [...prev.nodes, ...addedNodes].filter(n => allowedNodeIds.has(n.id));
+            const filteredLinks = allLinks.filter(l => {
+              const srcId = typeof l.source === 'object' ? l.source.id : l.source;
+              const tgtId = typeof l.target === 'object' ? l.target.id : l.target;
+              return allowedNodeIds.has(srcId) && allowedNodeIds.has(tgtId);
+            });
+
             return {
-              nodes: [...prev.nodes, ...addedNodes],
-              links: [...prev.links, ...addedLinks]
+              nodes: filteredNodes,
+              links: filteredLinks
             };
           });
           return;

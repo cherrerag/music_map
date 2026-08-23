@@ -29,9 +29,15 @@
 - [x] Selector dinámico de afines (6 / 10 / 15).
 - [x] Incremento del catálogo predeterminado a 10 afines (200 canciones afines por búsqueda).
 
+### v2.0 — Consenso por Co-ocurrencia en Playlists & Historial de 3 Pasos
+- [x] Algoritmo de Co-ocurrencia por frecuencia de incidencia en playlists públicas humanas (`spotify_service.py` / `graph_builder.py`).
+- [x] Muestra de indicador `% Incidencia en Playlists Reales` en `ArtistSidebar.jsx`.
+- [x] Ventana flotante de historial de 3 pasos (`pathHistory`) con poda visual automática de nodos lejanos para mantener el grafo limpio a 60 FPS.
+- [x] Archivo de seguimiento continuo en disco (`SESSION_MEMORY.md`) y protocolo de apertura/cierre.
+
 ---
 
-## 🟡 Próximos Hitos (v2.0+)
+## 🟡 Próximos Hitos (v2.1+)
 
 ### v2.0 — Autenticación Directa con TIDAL API & Spotify Web API
 - [ ] OAuth 2.0 Login con cuenta de TIDAL para guardar playlists directamente sin pasos intermedios.

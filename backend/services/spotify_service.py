@@ -122,4 +122,76 @@ class SpotifyService:
                 return results
             return []
 
+    async def get_playlist_cooccurrence(self, artist_name: str, limit: int = 15):
+        token = await self.get_token()
+        if not token:
+            return []
+
+        headers = {"Authorization": f"Bearer {token}"}
+        search_params = {"q": f'"{artist_name}"', "type": "playlist", "limit": 10}
+
+        async with httpx.AsyncClient() as client:
+            res = await client.get("https://api.spotify.com/v1/search", headers=headers, params=search_params)
+            if res.status_code != 200:
+                return []
+
+            playlists = res.json().get("playlists", {}).get("items", [])
+            if not playlists:
+                return []
+
+            total_playlists = len(playlists)
+
+            async def fetch_playlist_tracks(playlist_id):
+                try:
+                    p_res = await client.get(f"https://api.spotify.com/v1/playlists/{playlist_id}/tracks?limit=40", headers=headers)
+                    if p_res.status_code == 200:
+                        return p_res.json().get("items", [])
+                except Exception:
+                    pass
+                return []
+
+            tasks = [fetch_playlist_tracks(p["id"]) for p in playlists if p and isinstance(p, dict) and "id" in p]
+            playlists_tracks = await asyncio.gather(*tasks)
+
+            artist_counts = {}
+            for tracks in playlists_tracks:
+                seen_in_playlist = set()
+                for item in tracks:
+                    if not isinstance(item, dict):
+                        continue
+                    track = item.get("track")
+                    if not track or not isinstance(track, dict):
+                        continue
+                    for art in track.get("artists", []):
+                        a_id = art.get("id")
+                        a_name = art.get("name")
+                        if a_name and a_name.lower() != artist_name.lower() and a_id not in seen_in_playlist:
+                            seen_in_playlist.add(a_id)
+                            if a_id not in artist_counts:
+                                artist_counts[a_id] = {
+                                    "id": a_id,
+                                    "name": a_name,
+                                    "count": 0,
+                                    "genres": art.get("genres", []),
+                                    "popularity": 60
+                                }
+                            artist_counts[a_id]["count"] += 1
+
+            sorted_candidates = sorted(artist_counts.values(), key=lambda x: x["count"], reverse=True)
+            results = []
+            for item in sorted_candidates[:limit]:
+                incidence_pct = round((item["count"] / max(total_playlists, 1)), 2)
+                results.append({
+                    "id": item["id"],
+                    "name": item["name"],
+                    "incidence_count": item["count"],
+                    "total_playlists": total_playlists,
+                    "incidence_pct": incidence_pct,
+                    "genres": item.get("genres", []),
+                    "popularity": item["popularity"],
+                    "similarity": min(0.98, round(0.55 + (incidence_pct * 0.40), 2))
+                })
+            return results
+
 spotify_service = SpotifyService()
+

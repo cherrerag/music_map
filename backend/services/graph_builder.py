@@ -47,15 +47,16 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
             "image": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=600&q=80"
         }
 
-    # Parallel retrieval of details, origin, related, and similar
+    # Parallel retrieval of details, origin, related, similar, and playlist co-occurrence
     spotify_related_task = spotify_service.get_related_artists(seed_id) if spotify_search else asyncio.sleep(0, result=[])
-    lastfm_similar_task = lastfm_service.get_similar_artists(seed_name, limit=8)
+    playlist_cooccurrence_task = spotify_service.get_playlist_cooccurrence(seed_name, limit=15)
+    lastfm_similar_task = lastfm_service.get_similar_artists(seed_name, limit=10)
     origin_task = musicbrainz_service.get_artist_origin(seed_name)
     top_tracks_task = spotify_service.get_top_tracks(seed_id) if spotify_search else asyncio.sleep(0, result=[])
     seed_audio_task = audio_service.get_real_audio_preview(seed_name, "Hit")
 
-    related_spotify, similar_lastfm, origin_mb, top_tracks, seed_audio_url = await asyncio.gather(
-        spotify_related_task, lastfm_similar_task, origin_task, top_tracks_task, seed_audio_task
+    related_spotify, playlist_cooccurrence, similar_lastfm, origin_mb, top_tracks, seed_audio_url = await asyncio.gather(
+        spotify_related_task, playlist_cooccurrence_task, lastfm_similar_task, origin_task, top_tracks_task, seed_audio_task
     )
 
     seed_country = origin_mb.get("country", "Desconocido")
@@ -81,20 +82,37 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
 
     links = []
     
-    # Process candidates from Spotify Related & Last.fm
+    # Process candidates: Highest priority to Playlist Co-occurrence, then Spotify Related & Last.fm
     candidates = {}
 
-    for item in related_spotify:
-        cand_id = item["id"]
-        candidates[cand_id] = {
-            "id": cand_id,
+    # 1. Add playlist cooccurrence candidates first (Human Curation Consensus)
+    for item in playlist_cooccurrence:
+        c_id = item["id"]
+        candidates[c_id] = {
+            "id": c_id,
             "name": item["name"],
             "genres": item.get("genres", []),
             "popularity": item.get("popularity", 60),
-            "image": item.get("image"),
-            "similarity": 0.85
+            "image": None,
+            "similarity": item.get("similarity", 0.90),
+            "cooccurrence_pct": item.get("incidence_pct", 0.5)
         }
 
+    # 2. Complement with Spotify Related
+    for item in related_spotify:
+        cand_id = item["id"]
+        if cand_id not in candidates:
+            candidates[cand_id] = {
+                "id": cand_id,
+                "name": item["name"],
+                "genres": item.get("genres", []),
+                "popularity": item.get("popularity", 60),
+                "image": item.get("image"),
+                "similarity": 0.85,
+                "cooccurrence_pct": None
+            }
+
+    # 3. Complement with Last.fm Similar
     for item in similar_lastfm:
         c_name = item["name"]
         c_id = c_name.lower().replace(" ", "-")
@@ -107,7 +125,8 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
                 "genres": ["Indie", "Alternative"],
                 "popularity": int(match_score * 100),
                 "image": f"https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=600&q=80",
-                "similarity": round(match_score, 2)
+                "similarity": round(match_score, 2),
+                "cooccurrence_pct": None
             }
         else:
             candidates[c_id]["similarity"] = round(max(candidates[c_id]["similarity"], match_score), 2)
@@ -135,6 +154,7 @@ async def build_artist_network(seed_query: str, user_country: str = "Chile"):
             "isSeed": False,
             "isLocal": c_country == user_country or c_country in ["Chile", "CL"],
             "tidal_url": tidal_service.get_tidal_url(cand["name"]),
+            "cooccurrence_pct": cand.get("cooccurrence_pct"),
             "topTracks": [
               {"title": f"Hits - {cand['name']}", "album": "Single", "duration": "0:30", "previewUrl": cand_audio}
             ]

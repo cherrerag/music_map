@@ -358,11 +358,23 @@ export default function ArtistSidebar({
         {/* Multidimensional Affinity Breakdown Card */}
         <div className="glass-card" style={{ padding: '12px', border: '1px solid rgba(139, 92, 246, 0.35)', background: 'rgba(139, 92, 246, 0.08)' }}>
           <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#fff', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span>Radar de Afinidad Multidimensional</span>
+            <span>Radar de Afinidad & Consenso</span>
             <Sparkles size={14} color="#34d399" />
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {selectedNode?.cooccurrence_pct !== undefined && selectedNode?.cooccurrence_pct !== null && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '3px' }}>
+                  <span style={{ color: '#f472b6' }}>🎶 Incidencia en Playlists Reales</span>
+                  <span style={{ fontWeight: 700, color: '#f472b6' }}>{Math.round(selectedNode.cooccurrence_pct * 100)}%</span>
+                </div>
+                <div style={{ width: '100%', height: '4px', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.round(selectedNode.cooccurrence_pct * 100)}%`, height: '100%', background: '#ec4899' }} />
+                </div>
+              </div>
+            )}
+
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: '3px' }}>
                 <span style={{ color: '#c4b5fd' }}>🟣 Afinidad Sonora & Estilo</span>

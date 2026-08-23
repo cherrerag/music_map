@@ -39,6 +39,11 @@
   - **Copia al Portapapeles:** Lista formateada en texto plano.
   - **Flujo Guiado:** Integración en 1 clic con **TuneMyMusic** (`https://www.tunemymusic.com/es/transfer`) y **Soundiiz** (`https://soundiiz.com/webapp`).
 
+### 2.5. Algoritmo de Afinidad por Co-ocurrencia en Playlists & Historial de 3 Pasos (v2.0)
+- **Consenso de Curaduría Humana (Co-ocurrencia en Playlists):** En lugar de depender de algoritmos opacos, la afinidad se calcula analizando la frecuencia con la que otros artistas aparecen en las mismas playlists públicas donde está presente el artista origen (incidencia de coincidencia).
+- **Ventana Flotante de Historial (3 Pasos):** La navegación retiene únicamente los últimos 3 nodos explorados activos, podando automáticamente nodos y enlaces más antiguos para mantener el mapa enfocado, limpio y a 60 FPS.
+- **Indicador de Incidencia Real:** La ficha lateral despliega el porcentaje exacto de presencia en playlists humanas (`🎶 Incidencia en Playlists Reales`).
+
 ---
 
 ## 3. Requisitos No Funcionales

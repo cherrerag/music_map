@@ -38,8 +38,15 @@
 
 ---
 
-## 6. Unificación de Controles Visuales en `HeaderControl.jsx`
-- **Contexto:** La barra superior mostraba demasiados elementos horizontales que apretaban el diseño en resoluciones estándar.
-- **Decisión:** Fusionar el selector de país y el conmutador de escena local/global en un único dropdown unificado de Escena (`🌐 Escena Global`, `🇨🇱 Solo Chile`, `🇦🇷 Solo Argentina`, etc.) y retirar el botón redundante de compartir.
-- **Resultado:** Interfaz amplia, limpia y desahogada en todos los navegadores.
+## 7. Algoritmo de Co-ocurrencia por Frecuencia de Incidencia en Playlists
+- **Contexto:** Las recomendaciones basadas en similitudes binarias u opacas no capturaban el consenso real de oyentes del mismo artista o género.
+- **Decisión:** Implementar en `spotify_service.py` y `graph_builder.py` una búsqueda de playlists públicas asociadas al artista origen y calcular la tasa de incidencia (%) de artistas co-concurrentes en esas playlists.
+- **Resultado:** Los candidatos reflejan la selección real de curaduría humana en playlists de la comunidad musical.
+
+---
+
+## 8. Ventana Flotante de Historial de 3 Pasos (`pathHistory`)
+- **Contexto:** La expansión sucesiva de nodos provocaba saturación visual (*hairball effect*) y pérdida de rendimiento en canvas.
+- **Decisión:** Mantener una lista reactiva `pathHistory` limitada a los últimos 3 nodos explorados. Los nodos anteriores se podan automáticamente manteniendo sólo los enlaces conectados al trayecto activo.
+- **Resultado:** Grafo siempre claro, estético y con rendimiento sostenido a 60 FPS.
 
