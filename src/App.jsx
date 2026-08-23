@@ -127,13 +127,14 @@ export default function App() {
         genres: seedObj.genres
       };
 
-      const similarNodes = (seedObj.similar || []).slice(0, nodesLimit).map(sim => ({
+      const similarNodes = (seedObj.similar || []).slice(0, nodesLimit).map((sim, idx) => ({
         id: sim.id,
         name: sim.name,
         country: sim.country,
         flag: sim.flag,
         isSeed: false,
-        genres: sim.genres
+        genres: sim.genres,
+        cooccurrence_pct: sim.cooccurrence_pct || roundDec(0.92 - idx * 0.05)
       }));
 
       const links = (seedObj.similar || []).slice(0, nodesLimit).map(sim => ({
@@ -153,6 +154,10 @@ export default function App() {
 
     loadNetwork();
   }, [currentSeed, userCountry, nodesLimit]);
+
+  function roundDec(val) {
+    return Math.max(0.35, Math.round(val * 100) / 100);
+  }
 
   // Handler for expanding network from any node dynamically (keeping a 3-step active trail)
   const handleExpandNode = async (nodeToExpand) => {
@@ -220,13 +225,14 @@ export default function App() {
         const data = await lastfmRes.json();
         const similar = data?.similarartists?.artist;
         if (similar && similar.length > 0) {
-          const newNodes = similar.map((item) => ({
+          const newNodes = similar.map((item, idx) => ({
             id: item.name.toLowerCase().replace(/\s+/g, '-'),
             name: item.name,
             country: "Escena Global",
             flag: "🎵",
             isSeed: false,
-            genres: nodeToExpand.genres || ["Rock"]
+            genres: nodeToExpand.genres || ["Rock"],
+            cooccurrence_pct: roundDec(parseFloat(item.match) || (0.88 - idx * 0.05))
           }));
 
           setGraphData(prev => {
