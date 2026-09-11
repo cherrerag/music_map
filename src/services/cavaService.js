@@ -5,18 +5,29 @@ const CAVA_API = 'https://cava-ui.vercel.app/api/albums';
 let cachedAlbums = null;
 let fetchPromise = null;
 
+function cleanString(str) {
+  return (str || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
 function fetchCavaAlbums() {
   if (cachedAlbums !== null) return Promise.resolve(cachedAlbums);
   if (fetchPromise) return fetchPromise;
 
   fetchPromise = fetch(CAVA_API)
-    .then(res => (res.ok ? res.json() : []))
+    .then(res => (res.ok ? res.json() : null))
     .then(data => {
-      cachedAlbums = Array.isArray(data) ? data : [];
+      // Cava API returns { total: 5088, albums: [...] }
+      const list = Array.isArray(data) ? data : (data?.albums || []);
+      cachedAlbums = list;
       fetchPromise = null;
       return cachedAlbums;
     })
-    .catch(() => {
+    .catch(err => {
+      console.warn('[CavaService] Error fetching catalog:', err);
       cachedAlbums = [];
       fetchPromise = null;
       return [];
@@ -29,15 +40,22 @@ export function useCavaCatalog(artistName) {
   const [albums, setAlbums] = useState([]);
 
   useEffect(() => {
-    if (!artistName) return;
-    const name = artistName.toLowerCase().trim();
+    if (!artistName) {
+      setAlbums([]);
+      return;
+    }
+    const target = cleanString(artistName);
 
     fetchCavaAlbums().then(all => {
       const matches = all.filter(album => {
-        const a = (
-          album.artist || album.artistName || album.artist_name || ''
-        ).toLowerCase().trim();
-        return a === name || a.includes(name) || name.includes(a);
+        const artist = cleanString(album.artist || album.artistName);
+        const title = cleanString(album.title);
+        const query = cleanString(album.consultaTidal);
+        return (
+          (artist && (artist.includes(target) || target.includes(artist))) ||
+          (title && title.includes(target)) ||
+          (query && query.includes(target))
+        );
       });
       setAlbums(matches);
     });

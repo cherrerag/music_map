@@ -368,40 +368,43 @@ export default function ArtistSidebar({
             rel="noreferrer"
             className="glass-card"
             style={{
-              padding: '12px',
-              border: '1px solid rgba(185, 28, 28, 0.45)',
-              background: 'rgba(185, 28, 28, 0.1)',
+              padding: '14px',
+              border: '1px solid rgba(225, 29, 72, 0.45)',
+              background: 'rgba(225, 29, 72, 0.12)',
               display: 'block',
               textDecoration: 'none',
               cursor: 'pointer',
-              borderRadius: '10px'
+              borderRadius: '10px',
+              transition: 'all 0.2s ease'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: cavaAlbums.some(a => a.coverImage || a.cover || a.image || a.cover_image) ? '10px' : '0' }}>
-              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fca5a5' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontWeight: 700, fontSize: '0.88rem', color: '#fca5a5', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 🍷 En tu Cava ({cavaAlbums.length} álbum{cavaAlbums.length !== 1 ? 'es' : ''})
               </span>
               <ExternalLink size={14} style={{ color: '#fca5a5', flexShrink: 0 }} />
             </div>
-            {cavaAlbums.some(a => a.coverImage || a.cover || a.image || a.cover_image) && (
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                {cavaAlbums.slice(0, 4).map((album, idx) => {
-                  const src = album.coverImage || album.cover || album.image || album.cover_image;
-                  return src ? (
-                    <img
-                      key={idx}
-                      src={src}
-                      alt={album.title || album.name || ''}
-                      style={{
-                        width: '52px',
-                        height: '52px',
-                        borderRadius: '6px',
-                        objectFit: 'cover',
-                        border: '1px solid rgba(185, 28, 28, 0.35)'
-                      }}
-                    />
-                  ) : null;
-                })}
+
+            {/* List top 3 albums */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {cavaAlbums.slice(0, 3).map((album, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#cbd5e1' }}>
+                  <Disc size={14} color="#f87171" style={{ flexShrink: 0 }} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                    {album.title}
+                  </span>
+                  {album.tidalUrl && (
+                    <span style={{ fontSize: '0.7rem', color: '#38bdf8', flexShrink: 0 }}>
+                      TIDAL ↗
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {cavaAlbums.length > 3 && (
+              <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#f87171', fontWeight: 600, textAlign: 'right' }}>
+                Ver los {cavaAlbums.length} álbumes en Cava Musical →
               </div>
             )}
           </a>
