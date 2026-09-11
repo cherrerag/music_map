@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Play, Pause, ExternalLink, Network, Sparkles, MapPin, Music, Heart, Disc, Volume2, VolumeX, Plus, Check } from 'lucide-react';
 import { getArtistDetails } from '../data/musicData';
+import { useCavaCatalog } from '../services/cavaService';
 
 export default function ArtistSidebar({ 
   selectedNode, 
@@ -30,6 +31,8 @@ export default function ArtistSidebar({
   const cleanArtistName = (artist?.name || '')
     .replace(/ (Session|Constelación Local|Onda Sintética|Colectivo Fusión|expanded-\d+|Fans|sim-\d+)/gi, '')
     .trim();
+
+  const cavaAlbums = useCavaCatalog(cleanArtistName);
 
   // Active track list (prioritizing dynamic iTunes 10-track real search)
   const activeTracks = (dynamicTracks && dynamicTracks.length > 0) 
@@ -356,6 +359,53 @@ export default function ArtistSidebar({
             <Heart size={16} fill={isSaved ? '#ec4899' : 'none'} />
           </button>
         </div>
+
+        {/* Cava Catalog Badge */}
+        {cavaAlbums.length > 0 && (
+          <a
+            href={`https://cava-ui.vercel.app/?search=${encodeURIComponent(cleanArtistName)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="glass-card"
+            style={{
+              padding: '12px',
+              border: '1px solid rgba(185, 28, 28, 0.45)',
+              background: 'rgba(185, 28, 28, 0.1)',
+              display: 'block',
+              textDecoration: 'none',
+              cursor: 'pointer',
+              borderRadius: '10px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: cavaAlbums.some(a => a.coverImage || a.cover || a.image || a.cover_image) ? '10px' : '0' }}>
+              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#fca5a5' }}>
+                🍷 En tu Cava ({cavaAlbums.length} álbum{cavaAlbums.length !== 1 ? 'es' : ''})
+              </span>
+              <ExternalLink size={14} style={{ color: '#fca5a5', flexShrink: 0 }} />
+            </div>
+            {cavaAlbums.some(a => a.coverImage || a.cover || a.image || a.cover_image) && (
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {cavaAlbums.slice(0, 4).map((album, idx) => {
+                  const src = album.coverImage || album.cover || album.image || album.cover_image;
+                  return src ? (
+                    <img
+                      key={idx}
+                      src={src}
+                      alt={album.title || album.name || ''}
+                      style={{
+                        width: '52px',
+                        height: '52px',
+                        borderRadius: '6px',
+                        objectFit: 'cover',
+                        border: '1px solid rgba(185, 28, 28, 0.35)'
+                      }}
+                    />
+                  ) : null;
+                })}
+              </div>
+            )}
+          </a>
+        )}
 
         {/* Multidimensional Affinity Breakdown Card */}
         <div className="glass-card" style={{ padding: '12px', border: '1px solid rgba(139, 92, 246, 0.35)', background: 'rgba(139, 92, 246, 0.08)' }}>
