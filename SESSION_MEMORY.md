@@ -40,10 +40,36 @@
 
 ---
 
+### Sesión 2 — 11 de Septiembre, 2026 (Completada 🟢)
+- **Sprint Activo:** Sprint 2 — Emulación de Tira LED WS2812B (26 Modos Físicos), Integración Hi-Fi Cava Musical y Deep-Linking TIDAL.
+- **Objetivos Cumplidos:**
+  1. **Emulador Físico de Tira LED WS2812B ([`Ws2812bStripEmulator.jsx`](file:///Users/claudioherreram5/dev/music_map/src/components/Ws2812bStripEmulator.jsx) & [`ledStripEmulator.js`](file:///Users/claudioherreram5/dev/music_map/src/services/ledStripEmulator.js)):**
+     - Emulación en Canvas HTML5 a 60 FPS de 480 LEDs físicos replicando el hardware ESP32 de `sla-noise-zero` y `esp32-min-audio-led`.
+     - Búfer de color RGB (`Uint8ClampedArray`), decaimiento orgánico (`decayFactor 0.88-0.96`), física de difusión (`diffuse()`) y curva de sensibilidad perceptual D-55.
+     - Extracción espectral en tiempo real de 7 bandas (`subBass`, `bass`, `lowMid`, `mid`, `highMid`, `treble`, `brilliance`) en [`audioAnalysisService.js`](file:///Users/claudioherreram5/dev/music_map/src/services/audioAnalysisService.js) mediante Web Audio API conectado a los previews de audio.
+  2. **Suite Completa de 26 Modos Visuales ([`src/services/ledModes/`](file:///Users/claudioherreram5/dev/music_map/src/services/ledModes/)):**
+     - Arquitectura modularizada con 26 perfiles categorizados:
+       - *Reactivos al Ritmo / Transitorios*: Kick Quantum, Snare Collider, Hi-Hat Sparks, Sub-Bass Heat, Dynamic Strobe.
+       - *Espectro y Frecuencia*: Espectrómetro Jazz (5 bandas en espejo), Rainbow Frequency, Dual Energy.
+       - *Ambientales y Plasma*: Nebulosa Psicodélica, Fuego Nórdico, Auroras Boreales, Océano Profundo, Cyberpunk Rain, Lava Lamp, etc.
+       - *Modos Sentinel*: Centinela Acústico (D-55), Calibración White, VU Meter Estéreo.
+     - Selector desplegable `<select>` en UI organizado semánticamente con `<optgroup>` y control de brillo.
+  3. **Integración con Cava Musical y TIDAL ([`ArtistSidebar.jsx`](file:///Users/claudioherreram5/dev/music_map/src/components/ArtistSidebar.jsx) & [`cavaService.js`](file:///Users/claudioherreram5/dev/music_map/src/services/cavaService.js)):**
+     - Consumo asíncrono con caché del catálogo de 5.088 álbumes de Notion vía endpoint `/api/albums`.
+     - Normalización y desanidamiento de enlaces HTML en la tarjeta Cava para permitir interactividad plena.
+     - Enlaces independientes por cada álbum directo a TIDAL (`album.tidalUrl` o búsqueda precisa).
+     - Soporte para catálogos extensos con lista expandible y scroll (`maxHeight: 240px`) con toggle `[▼ Ver los N álbumes / ▲ Mostrar menos]`.
+     - Botón de deep-link hacia `https://cava-ui.vercel.app/?search=${artist}` que filtra de inmediato la colección completa en Cava Musical.
+  4. **Despliegue a Producción Vercel:**
+     - Validación con `npm run build` (0 errores).
+     - Despliegue automático en Vercel verificado en `https://music-map-rho.vercel.app` (Commit `9bfb736`).
+
+---
+
 ## 🔮 Prompt de Handoff para la Próxima Sesión
 
 ```markdown
 Hola. Vamos a retomar el proyecto MusicMap 🌊. Por favor lee `SESSION_MEMORY.md`, `PRD_musicmap.md` y `README.md`. 
-En la sesión anterior completamos la v2.0/v2.2 desplegando el motor 3D WebGL Cosmic Constellation (Three.js), la eliminación de esferas obstructivas, el sistema de colores por trayecto de 3 pasos y el módulo de vinculación condicional de cuentas TIDAL (TidalLinkModal).
+En la sesión anterior completamos la v2.3 desplegando el emulador de tira LED WS2812B (480 LEDs, Canvas a 60 FPS, 26 modos visuales categorizados en <select>), la sincronización Web Audio en 7 bandas y la integración completa de Cava Musical con enlaces individuales directos a TIDAL y deep-link al catálogo general.
 Ejecuta `git status` para comprobar el estado actual y cuéntame el resumen antes de proponer los próximos hitos.
 ```
