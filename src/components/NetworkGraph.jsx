@@ -66,6 +66,8 @@ export default function NetworkGraph({
 
     // Create D3 Force Simulation with Spacious 360° Radial & Anti-Overlap Physics
     const sim = d3.forceSimulation(nodes)
+      .alphaDecay(0.05)
+      .alphaMin(0.002)
       .force('link', d3.forceLink(links).id(d => d.id).distance(d => {
         const isLocalConnection = d.target.country === userCountry || d.source.country === userCountry;
         // Expanded distance (170px local, up to 260px global) to avoid clumping
@@ -237,7 +239,7 @@ export default function NetworkGraph({
     ctx.restore();
   };
 
-  // Resize canvas dynamically
+  // Resize canvas dynamically — only runs on mount/unmount, not on every pan/zoom
   useEffect(() => {
     const handleResize = () => {
       if (!containerRef.current || !canvasRef.current) return;
@@ -256,6 +258,11 @@ export default function NetworkGraph({
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Re-render canvas whenever zoom/pan transform changes
+  useEffect(() => {
+    renderCanvas();
   }, [transform]);
 
   // Pointer & mouse event handlers (Drag, Hover, Click, Zoom)
