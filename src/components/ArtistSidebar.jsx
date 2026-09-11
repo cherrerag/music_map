@@ -17,6 +17,7 @@ export default function ArtistSidebar({
   const [isSaved, setIsSaved] = useState(false);
   const [audioProgress, setAudioProgress] = useState(0);
   const [isMuted, setIsMuted] = useState(false);
+  const [showAllCava, setShowAllCava] = useState(false);
 
   const audioRef = useRef(null);
 
@@ -152,6 +153,7 @@ export default function ArtistSidebar({
     setDynamicTracks(null);
     setFetchedArtistImage(null);
     setImgError(false);
+    setShowAllCava(false);
   }, [selectedNode?.id]);
 
   // Clean up audio on unmount
@@ -362,52 +364,149 @@ export default function ArtistSidebar({
 
         {/* Cava Catalog Badge */}
         {cavaAlbums.length > 0 && (
-          <a
-            href={`https://cava-ui.vercel.app/?search=${encodeURIComponent(cleanArtistName)}`}
-            target="_blank"
-            rel="noreferrer"
+          <div
             className="glass-card"
             style={{
               padding: '14px',
               border: '1px solid rgba(225, 29, 72, 0.45)',
               background: 'rgba(225, 29, 72, 0.12)',
-              display: 'block',
-              textDecoration: 'none',
-              cursor: 'pointer',
-              borderRadius: '10px',
-              transition: 'all 0.2s ease'
+              borderRadius: '10px'
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
               <span style={{ fontWeight: 700, fontSize: '0.88rem', color: '#fca5a5', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 🍷 En tu Cava ({cavaAlbums.length} álbum{cavaAlbums.length !== 1 ? 'es' : ''})
               </span>
-              <ExternalLink size={14} style={{ color: '#fca5a5', flexShrink: 0 }} />
+              <a
+                href={`https://cava-ui.vercel.app/?search=${encodeURIComponent(cleanArtistName)}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  color: '#fca5a5',
+                  display: 'flex',
+                  alignItems: 'center',
+                  textDecoration: 'none',
+                  opacity: 0.85
+                }}
+                title="Abrir catálogo completo en Cava Musical"
+              >
+                <ExternalLink size={14} style={{ flexShrink: 0 }} />
+              </a>
             </div>
 
-            {/* List top 3 albums */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              {cavaAlbums.slice(0, 3).map((album, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem', color: '#cbd5e1' }}>
-                  <Disc size={14} color="#f87171" style={{ flexShrink: 0 }} />
-                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
-                    {album.title}
-                  </span>
-                  {album.tidalUrl && (
-                    <span style={{ fontSize: '0.7rem', color: '#38bdf8', flexShrink: 0 }}>
+            {/* List albums (with scroll and expand/collapse) */}
+            <div 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '6px',
+                maxHeight: showAllCava ? '240px' : 'none',
+                overflowY: showAllCava ? 'auto' : 'visible',
+                paddingRight: showAllCava ? '4px' : '0'
+              }}
+            >
+              {(showAllCava ? cavaAlbums : cavaAlbums.slice(0, 4)).map((album, idx) => {
+                const tidalLink = album.tidalUrl || `https://listen.tidal.com/search?q=${encodeURIComponent(album.consultaTidal || `${cleanArtistName} ${album.title}`)}`;
+                return (
+                  <a
+                    key={idx}
+                    href={tidalLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '0.8rem',
+                      color: '#cbd5e1',
+                      textDecoration: 'none',
+                      padding: '5px 8px',
+                      borderRadius: '6px',
+                      background: 'rgba(255, 255, 255, 0.04)',
+                      border: '1px solid rgba(255, 255, 255, 0.05)',
+                      transition: 'background 0.15s ease, border-color 0.15s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(225, 29, 72, 0.2)';
+                      e.currentTarget.style.borderColor = 'rgba(225, 29, 72, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                      e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
+                    }}
+                    title={`Reproducir "${album.title}" en TIDAL`}
+                  >
+                    <Disc size={14} color="#f87171" style={{ flexShrink: 0 }} />
+                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, color: '#f1f5f9' }}>
+                      {album.title}
+                    </span>
+                    <span style={{ fontSize: '0.7rem', color: '#38bdf8', flexShrink: 0, fontWeight: 600 }}>
                       TIDAL ↗
                     </span>
-                  )}
-                </div>
-              ))}
+                  </a>
+                );
+              })}
             </div>
 
-            {cavaAlbums.length > 3 && (
-              <div style={{ marginTop: '8px', fontSize: '0.75rem', color: '#f87171', fontWeight: 600, textAlign: 'right' }}>
-                Ver los {cavaAlbums.length} álbumes en Cava Musical →
-              </div>
+            {/* Expand / Collapse toggle if > 4 albums */}
+            {cavaAlbums.length > 4 && (
+              <button
+                type="button"
+                onClick={() => setShowAllCava(!showAllCava)}
+                style={{
+                  width: '100%',
+                  marginTop: '8px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#fca5a5',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  padding: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px'
+                }}
+              >
+                {showAllCava ? '▲ Mostrar menos' : `▼ Ver los ${cavaAlbums.length} álbumes en lista`}
+              </button>
             )}
-          </a>
+
+            {/* Direct Deep-link Button to Cava Musical */}
+            <a
+              href={`https://cava-ui.vercel.app/?search=${encodeURIComponent(cleanArtistName)}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                marginTop: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '6px',
+                padding: '8px 12px',
+                background: 'rgba(225, 29, 72, 0.22)',
+                border: '1px solid rgba(225, 29, 72, 0.45)',
+                borderRadius: '6px',
+                fontSize: '0.78rem',
+                color: '#fecdd3',
+                fontWeight: 600,
+                textDecoration: 'none',
+                transition: 'all 0.2s ease',
+                textAlign: 'center'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(225, 29, 72, 0.35)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(225, 29, 72, 0.22)';
+              }}
+            >
+              <span>Ver los {cavaAlbums.length} álbumes en Cava Musical</span>
+              <ExternalLink size={13} />
+            </a>
+          </div>
         )}
 
         {/* Multidimensional Affinity Breakdown Card */}
