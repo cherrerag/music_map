@@ -51,7 +51,11 @@ export default function NetworkGraph({
 
     // Copy data for d3 physics
     const nodes = filteredNodes.map(n => ({ ...n }));
-    const links = filteredLinks.map(l => ({ ...l }));
+    const links = filteredLinks.map(l => ({
+      ...l,
+      source: typeof l.source === 'object' ? l.source.id : l.source,
+      target: typeof l.target === 'object' ? l.target.id : l.target
+    }));
 
     nodesRef.current = nodes;
     linksRef.current = links;

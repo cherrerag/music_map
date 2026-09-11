@@ -116,7 +116,8 @@ export default function App() {
     async function loadNetwork() {
       try {
         const response = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(seedName)}&user_country=${encodeURIComponent(userCountry)}&limit=${nodesLimit}`);
-        if (response.ok) {
+        const contentType = response.headers.get('content-type') || '';
+        if (response.ok && contentType.includes('application/json')) {
           const data = await response.json();
           if (data && data.nodes && data.nodes.length > 0) {
             setGraphData(data);
@@ -177,59 +178,64 @@ export default function App() {
   const handleExpandNode = async (nodeToExpand) => {
     showToast(`Expandiendo red para ${nodeToExpand.name}...`);
     const cleanName = nodeToExpand.name.replace(/ (Session|Constelación Local|Onda Sintética|Colectivo Fusión|expanded-\d+|Fans|sim-\d+)/gi, '').trim();
+    const expandId = typeof nodeToExpand.id === 'string' 
+      ? nodeToExpand.id 
+      : (nodeToExpand.name ? nodeToExpand.name.toLowerCase().replace(/\s+/g, '-') : String(nodeToExpand));
 
     // Update path history trail (keep max 3 recent steps)
-    let newHistory = [];
-    setPathHistory(prev => {
-      newHistory = [...prev, nodeToExpand.id].slice(-3);
-      return newHistory;
-    });
+    setPathHistory(prev => [...prev, expandId].slice(-3));
 
     const API_BASE = import.meta.env.VITE_API_URL !== undefined 
       ? import.meta.env.VITE_API_URL 
       : (import.meta.env.DEV ? 'http://localhost:8000' : '');
 
-    // 1. Try backend serverless API
+    // 1. Try backend API if available and responsive
     try {
       const res = await fetch(`${API_BASE}/api/network?artist=${encodeURIComponent(cleanName)}&user_country=${encodeURIComponent(userCountry)}&limit=${nodesLimit}`);
-      if (res.ok) {
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
         const data = await res.json();
         if (data && data.nodes && data.nodes.length > 0) {
           setGraphData(prev => {
             const existingNodeIds = new Set(prev.nodes.map(n => n.id));
             const addedNodes = data.nodes.filter(n => !existingNodeIds.has(n.id) && n.name.toLowerCase() !== cleanName.toLowerCase());
-            const addedLinks = data.links || [];
+
+            // Normalize link sources and targets to ensure pure string IDs
+            const normalizedPrevLinks = prev.links.map(l => ({
+              ...l,
+              source: typeof l.source === 'object' ? l.source.id : l.source,
+              target: typeof l.target === 'object' ? l.target.id : l.target
+            }));
+            const normalizedAddedLinks = (data.links || []).map(l => ({
+              ...l,
+              source: typeof l.source === 'object' ? l.source.id : l.source,
+              target: typeof l.target === 'object' ? l.target.id : l.target
+            }));
+
+            const allLinks = [...normalizedPrevLinks, ...normalizedAddedLinks];
 
             // Prune nodes older than 3 steps away from the active trail
-            const activeTrailSet = new Set(newHistory.length > 0 ? newHistory : [nodeToExpand.id]);
-            const allLinks = [...prev.links, ...addedLinks];
-
-            // Keep nodes if they are in the active trail or connected to an active trail node
+            const activeTrailSet = new Set([expandId]);
             const allowedNodeIds = new Set(activeTrailSet);
             allLinks.forEach(l => {
-              const srcId = typeof l.source === 'object' ? l.source.id : l.source;
-              const tgtId = typeof l.target === 'object' ? l.target.id : l.target;
-              if (activeTrailSet.has(srcId)) allowedNodeIds.add(tgtId);
-              if (activeTrailSet.has(tgtId)) allowedNodeIds.add(srcId);
+              if (activeTrailSet.has(l.source)) allowedNodeIds.add(l.target);
+              if (activeTrailSet.has(l.target)) allowedNodeIds.add(l.source);
             });
 
             const filteredNodes = [...prev.nodes, ...addedNodes].filter(n => allowedNodeIds.has(n.id));
-            const filteredLinks = allLinks.filter(l => {
-              const srcId = typeof l.source === 'object' ? l.source.id : l.source;
-              const tgtId = typeof l.target === 'object' ? l.target.id : l.target;
-              return allowedNodeIds.has(srcId) && allowedNodeIds.has(tgtId);
-            });
+            const filteredLinks = allLinks.filter(l => allowedNodeIds.has(l.source) && allowedNodeIds.has(l.target));
 
             return {
               nodes: filteredNodes,
               links: filteredLinks
             };
           });
+          showToast(`¡Red expandida con ${data.nodes.length} artistas!`);
           return;
         }
       }
     } catch (err) {
-      console.warn("Backend API offline during expand, attempting direct Last.fm client fetch:", err);
+      console.warn("Backend API offline or returned invalid response, attempting direct Last.fm client fetch:", err);
     }
 
     // 2. Direct browser fetch from Last.fm API as client-side fallback
@@ -239,35 +245,48 @@ export default function App() {
         const data = await lastfmRes.json();
         const similar = data?.similarartists?.artist;
         if (similar && similar.length > 0) {
-          const newNodes = similar.map((item, idx) => ({
-            id: item.name.toLowerCase().replace(/\s+/g, '-'),
-            name: item.name,
-            country: "Escena Global",
-            flag: "🎵",
-            isSeed: false,
-            genres: nodeToExpand.genres || ["Rock"],
-            cooccurrence_pct: roundDec(parseFloat(item.match) || (0.88 - idx * 0.05))
-          }));
+          const newNodes = similar.map((item, idx) => {
+            const rawId = item.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            return {
+              id: rawId,
+              name: item.name,
+              country: "Escena Global",
+              flag: "🎵",
+              isSeed: false,
+              genres: nodeToExpand.genres || ["Rock", "Alternative"],
+              cooccurrence_pct: roundDec(parseFloat(item.match) || (0.88 - idx * 0.05))
+            };
+          });
 
           setGraphData(prev => {
             const existingNodeIds = new Set(prev.nodes.map(n => n.id));
             const addedNodes = newNodes.filter(n => !existingNodeIds.has(n.id) && n.name.toLowerCase() !== cleanName.toLowerCase());
+
+            // Normalize existing links to clean strings
+            const normalizedPrevLinks = prev.links.map(l => ({
+              ...l,
+              source: typeof l.source === 'object' ? l.source.id : l.source,
+              target: typeof l.target === 'object' ? l.target.id : l.target
+            }));
+
             const addedLinks = addedNodes.map((n, i) => ({
-              source: nodeToExpand.id,
+              source: expandId,
               target: n.id,
-              weight: 0.85 - i * 0.04
+              weight: Math.max(0.60, 0.92 - i * 0.03) // Comfortably passes similarityThreshold
             }));
 
             return {
               nodes: [...prev.nodes, ...addedNodes],
-              links: [...prev.links, ...addedLinks]
+              links: [...normalizedPrevLinks, ...addedLinks]
             };
           });
+          showToast(`¡Red expandida con ${newNodes.length} artistas vía Last.fm!`);
           return;
         }
       }
     } catch (err) {
       console.error("Last.fm client expansion error:", err);
+      showToast("No se pudo expandir la red para este artista");
     }
   };
 

@@ -43,7 +43,11 @@ export default function NetworkGraph3D({
 
     const data3D = {
       nodes: filteredNodes.map(n => ({ ...n })),
-      links: filteredLinks.map(l => ({ ...l }))
+      links: filteredLinks.map(l => ({
+        ...l,
+        source: typeof l.source === 'object' ? l.source.id : l.source,
+        target: typeof l.target === 'object' ? l.target.id : l.target
+      }))
     };
 
     // Clean up previous 3D instance if exists
