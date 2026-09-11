@@ -6,6 +6,7 @@ import ArtistSidebar from './components/ArtistSidebar';
 import PlaylistCartModal from './components/PlaylistCartModal';
 import TidalLinkModal from './components/TidalLinkModal';
 import AuthGatekeeperModal, { ALLOWED_EMAILS } from './components/AuthGatekeeperModal';
+import Ws2812bStripEmulator from './components/Ws2812bStripEmulator';
 import { SEED_ARTISTS, getArtistDetails } from './data/musicData';
 import { Sparkles, Info, Check } from 'lucide-react';
 
@@ -299,6 +300,63 @@ export default function App() {
     showToast("¡Enlace del mapa copiado al portapapeles! 🎵");
   };
 
+  // WS2812B 26-mode contract test exposed in dev console
+  useEffect(() => {
+    window.__testLedStripContract = async () => {
+      const { createLedStrip } = await import('./services/ledStripEmulator');
+      const { MODE_IDS } = await import('./services/ledModes/index.js');
+      const strip = createLedStrip();
+      const EXPECTED = 26;
+      if (MODE_IDS.length !== EXPECTED) {
+        console.error(`❌ Expected ${EXPECTED} modes, found ${MODE_IDS.length}`);
+        return { CONTRACT_PASS: false, totalModesTested: MODE_IDS.length, error: 'wrong_count' };
+      }
+      let checksPassed = 0;
+      const failedModes = [];
+      const dummyMetrics = (i) => ({
+        volume: 0.3 + (i % 5) * 0.15,
+        bass:   0.5 + (i % 3) * 0.2,
+        snare:  0.4 + (i % 4) * 0.15,
+        high:   0.3 + (i % 6) * 0.1,
+        bands:  new Float32Array(16).fill(0.3)
+      });
+      for (const modeId of MODE_IDS) {
+        let ok = true;
+        try {
+          for (let cycle = 0; cycle < 5; cycle++) {
+            strip.render(modeId, dummyMetrics(cycle));
+            const buf = strip.getBuffer();
+            if (buf.length !== 480) { ok = false; break; }
+            for (let p = 0; p < 480; p++) {
+              const { r, g, b } = buf[p];
+              if (isNaN(r) || isNaN(g) || isNaN(b) || r == null || g == null || b == null ||
+                  r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                ok = false; break;
+              }
+            }
+            if (!ok) break;
+          }
+        } catch (e) {
+          ok = false;
+          console.warn(`Mode ${modeId} threw:`, e);
+        }
+        if (ok) checksPassed++;
+        else failedModes.push(modeId);
+      }
+      const pass = checksPassed === EXPECTED;
+      const result = {
+        CONTRACT_PASS: pass,
+        totalModesTested: EXPECTED,
+        checksPassed,
+        status: pass ? 'ALL_26_MODES_OPERATIONAL' : `FAILED: ${failedModes.join(', ')}`
+      };
+      if (pass) console.log('✅ WS2812B 26-MODES CONTRACT PASSED', result);
+      else console.error('❌ WS2812B CONTRACT FAILED', result);
+      return result;
+    };
+    return () => { delete window.__testLedStripContract; };
+  }, []);
+
   return (
     <div style={{ width: '100vw', height: '100vh', position: 'relative', overflow: 'hidden' }}>
       
@@ -388,6 +446,9 @@ export default function App() {
         onLinkTidal={setTidalUser}
         tidalUser={tidalUser}
       />
+
+      {/* WS2812B LED Strip Emulator */}
+      <Ws2812bStripEmulator />
 
       {/* Toast Notification */}
       {toastMessage && (

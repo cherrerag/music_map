@@ -223,3 +223,79 @@ body {
   }
 }
 
+/* WS2812B LED Strip Emulator */
+.ws2812b-dock {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  pointer-events: none;
+}
+
+.ws2812b-chassis {
+  width: 100%;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(5,7,14,0.0) 0%, rgba(5,7,14,0.98) 100%);
+  pointer-events: auto;
+}
+
+.ws2812b-canvas {
+  display: block;
+  width: 100%;
+  height: 52px;
+  image-rendering: pixelated;
+}
+
+.ws2812b-controls {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 8px 14px;
+  background: rgba(5, 7, 14, 0.97);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-wrap: wrap;
+  pointer-events: auto;
+}
+
+.ws2812b-mode-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #c4b5fd;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 5px 28px 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  outline: none;
+  min-width: 180px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b5cf6' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ws2812b-mode-select:hover {
+  border-color: rgba(139, 92, 246, 0.5);
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
+}
+
+.ws2812b-mode-select:focus {
+  border-color: rgba(139, 92, 246, 0.8);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.ws2812b-mode-select option,
+.ws2812b-mode-select optgroup {
+  background: #0f1728;
+  color: #e2e8f0;
+}
+
